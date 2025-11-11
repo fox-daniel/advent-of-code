@@ -16,7 +16,6 @@ fn main() -> std::io::Result<()> {
         left_list.push(pair[0].parse::<i32>().unwrap());
         right_list.push(pair[1].parse::<i32>().unwrap());
     }
-    // println!("{:#?}", left_list);
     left_list.sort();
     right_list.sort();
     let distance = left_list
