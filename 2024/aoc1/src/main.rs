@@ -9,12 +9,11 @@ fn main() -> std::io::Result<()> {
     let mut left_list: Vec<i32> = vec![];
     let mut right_list: Vec<i32> = vec![];
     let buf_reader = BufReader::new(input_file);
-    let mut pair: Vec<&str> = Vec::with_capacity(2);
     for line in buf_reader.lines() {
-        let line = line?;
-        pair = line.split_whitespace().collect();
-        left_list.push(pair[0].parse::<i32>().unwrap());
-        right_list.push(pair[1].parse::<i32>().unwrap());
+        let line = line.unwrap();
+        let mut pair = line.split_whitespace();
+        left_list.push(pair.next().unwrap().parse::<i32>().unwrap());
+        right_list.push(pair.next().unwrap().parse::<i32>().unwrap());
     }
     left_list.sort();
     right_list.sort();
