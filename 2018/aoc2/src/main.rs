@@ -23,21 +23,12 @@ fn part1(input: &str) -> std::io::Result<()> {
                 .and_modify(|counter| *counter += 1)
                 .or_insert(1);
         }
-        let (has_double, has_triple) = counts.values().fold((false, false), |acc, v| {
-            if *v == 2 {
-                (true, acc.1)
-            } else if *v == 3 {
-                (acc.0, true)
-            } else {
-                acc
-            }
-        });
-        if has_double {
+        if counts.values().any(|v| *v == 2) {
             doubles += 1;
         };
-        if has_triple {
+        if counts.values().any(|v| *v == 3) {
             triples += 1;
-        };
+        }
     }
     let check_sum = doubles * triples;
     let check_sum = format!("{check_sum}\n");
