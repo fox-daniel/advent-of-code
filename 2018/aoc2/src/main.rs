@@ -38,6 +38,7 @@ fn part1(input: &str) -> std::io::Result<()> {
 
 fn part2(input: &str) -> std::io::Result<()> {
     // O(N^2*K): measure the distance between all strings; use early stop
+    // switch to index into a vec so only check each pair of ids once
     let mut id1: String = String::new();
     let mut id2: String = String::new();
     for s1 in input.lines() {
