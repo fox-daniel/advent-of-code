@@ -45,20 +45,36 @@ fn part1(input: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-// fn part2(input: &str) -> std::io::Result<()> {
-//     let mut hs = HashSet::<i32>::new();
-//     let mut freq = 0i32;
-//     hs.insert(freq);
-//     let vec: Vec<i32> = input
-//         .lines()
-//         .map(|item| item.replace("+", "").parse::<i32>().unwrap())
-//         .collect();
-//     for item in vec.iter().cycle() {
-//         freq += item;
-//         if !hs.insert(freq) {
-//             println!("{freq}");
-//             break;
-//         }
-//     }
-//     Ok(())
-// }
+fn part2(input: &str) -> std::io::Result<()> {
+    // O(N^2*K): measure the distance between all strings; use early stop
+    Ok(())
+}
+
+fn off_by_one(s1: &str, s2: &str) -> bool {
+    let mut dist = 0;
+    for (c1, c2) in s1.chars().zip(s2.chars()) {
+        if c1 != c2 {
+            dist += 1
+        }
+        if dist > 1 {
+            return false;
+        }
+    }
+    dist == 1
+}
+
+mod test {
+    use super::*;
+    #[test]
+    fn test_off_by_one() {
+        let s1 = "abcd";
+        let s2 = "abce";
+        assert!(off_by_one(s1, s2));
+    }
+    #[test]
+    fn test_not_off_by_one() {
+        let s1 = "abcd";
+        let s2 = "abfe";
+        assert!(!off_by_one(s1, s2));
+    }
+}
