@@ -6,7 +6,7 @@ fn main() -> std::io::Result<()> {
     let input = fs::read_to_string("input/input.txt")?;
 
     part1(&input)?;
-    // part2(&input)?;
+    part2(&input)?;
 
     Ok(())
 }
@@ -47,6 +47,24 @@ fn part1(input: &str) -> std::io::Result<()> {
 
 fn part2(input: &str) -> std::io::Result<()> {
     // O(N^2*K): measure the distance between all strings; use early stop
+    let mut id1: String = String::new();
+    let mut id2: String = String::new();
+    for s1 in input.lines() {
+        for s2 in input.lines() {
+            if off_by_one(s1, s2) {
+                id1 = s1.to_string();
+                id2 = s2.to_string();
+                break;
+            }
+        }
+    }
+    let id: String = id1
+        .chars()
+        .zip(id2.chars())
+        .filter(|(c1, c2)| c1 == c2)
+        .map(|item| item.0)
+        .collect();
+    println!("{id}");
     Ok(())
 }
 
@@ -63,6 +81,7 @@ fn off_by_one(s1: &str, s2: &str) -> bool {
     dist == 1
 }
 
+#[cfg(test)]
 mod test {
     use super::*;
     #[test]
