@@ -45,10 +45,10 @@ fn part2(input: &str) -> std::io::Result<()> {
     let mut s2: &str;
     for i in 0..n {
         for j in i..n {
-            s1 = lines[i];
-            s2 = lines[j];
-            if off_by_one(s1, s2) {
-                find_common_id(s1, s2);
+            // s1 = lines[i];
+            // s2 = lines[j];
+            if off_by_one(lines[i], lines[j]) {
+                find_common_id(lines[i], lines[j]);
                 return Ok(());
             }
         }
