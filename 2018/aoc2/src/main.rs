@@ -39,25 +39,31 @@ fn part1(input: &str) -> std::io::Result<()> {
 fn part2(input: &str) -> std::io::Result<()> {
     // O(N^2*K): measure the distance between all strings; use early stop
     // switch to index into a vec so only check each pair of ids once
-    let mut id1: String = String::new();
-    let mut id2: String = String::new();
-    for s1 in input.lines() {
-        for s2 in input.lines() {
+    let lines: Vec<&str> = input.lines().collect();
+    let n = lines.len();
+    let mut s1: &str;
+    let mut s2: &str;
+    for i in 0..n {
+        for j in i..n {
+            s1 = lines[i];
+            s2 = lines[j];
             if off_by_one(s1, s2) {
-                id1 = s1.to_string();
-                id2 = s2.to_string();
-                break;
+                find_common_id(s1, s2);
+                return Ok(());
             }
         }
     }
-    let id: String = id1
+    Ok(())
+}
+
+fn find_common_id(s1: &str, s2: &str) {
+    let id: String = s1
         .chars()
-        .zip(id2.chars())
+        .zip(s2.chars())
         .filter(|(c1, c2)| c1 == c2)
         .map(|item| item.0)
         .collect();
     println!("{id}");
-    Ok(())
 }
 
 fn off_by_one(s1: &str, s2: &str) -> bool {
