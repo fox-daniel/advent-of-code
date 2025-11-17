@@ -41,29 +41,28 @@ fn part2(input: &str) -> std::io::Result<()> {
     // switch to index into a vec so only check each pair of ids once
     let lines: Vec<&str> = input.lines().collect();
     let n = lines.len();
-    let mut s1: &str;
-    let mut s2: &str;
     for i in 0..n {
         for j in i..n {
-            // s1 = lines[i];
-            // s2 = lines[j];
-            if off_by_one(lines[i], lines[j]) {
-                find_common_id(lines[i], lines[j]);
-                return Ok(());
+            if let Some(id) = find_common_id(lines[i], lines[j]) {
+                writeln!(std::io::stdout(), "{id}")?;
             }
         }
     }
     Ok(())
 }
 
-fn find_common_id(s1: &str, s2: &str) {
-    let id: String = s1
-        .chars()
-        .zip(s2.chars())
-        .filter(|(c1, c2)| c1 == c2)
-        .map(|item| item.0)
-        .collect();
-    println!("{id}");
+fn find_common_id(s1: &str, s2: &str) -> Option<String> {
+    if off_by_one(s1, s2) {
+        let id: String = s1
+            .chars()
+            .zip(s2.chars())
+            .filter(|(c1, c2)| c1 == c2)
+            .map(|item| item.0)
+            .collect();
+        Some(id)
+    } else {
+        None
+    }
 }
 
 fn off_by_one(s1: &str, s2: &str) -> bool {
