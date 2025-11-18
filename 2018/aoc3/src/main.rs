@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-/// Vertical distances are measured downward
+/// Vertical distances are measured downward, so the top edge has a lower value than the bottom edge
 #[derive(Debug)]
 struct Claim {
     id: u32,
@@ -103,18 +103,12 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut coverage = HashMap::<Loc, u32>::new();
 
-    // By Claim
     let mut bbox: BBox;
     let mut locations: Locations;
     for claim in claims.iter() {
         bbox = claim.bounding_box();
         locations = bbox.locations();
         update_coverage(&mut coverage, locations);
-        // println!("{:#?}", &coverage);
-    }
-    // for (k, v) in coverage.iter().take(3) {
-    //     println!("{:?}, {v}", k);
-    // }
     let disputed = coverage.into_values().filter(|v| *v > 1).count();
     writeln!(io::stdout(), "{disputed}")?;
     Ok(())
@@ -122,7 +116,6 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
 
 fn update_coverage(coverage: &mut HashMap<Loc, u32>, locations: Locations) {
     for loc in locations.0.into_iter() {
-        // println!("{x}, {y}");
         coverage
             .entry(loc.clone())
             .and_modify(|c| *c += 1)
