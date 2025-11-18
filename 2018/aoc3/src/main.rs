@@ -2,7 +2,7 @@ use std::fs;
 use std::io::Write;
 
 fn main() -> std::io::Result<()> {
-    let input = fs::read_to_string(input/input.txt)?;
+    let input = fs::read_to_string("input/input.txt")?;
 
     part1(&input)?;
     part2(&input)?;

@@ -11,7 +11,7 @@ session_cookie="$AOC_SESSION_COOKIE"
 
 curl -b "session=$session_cookie" "https://adventofcode.com/2018/day/$1/input" > "$dir_name/input/input.txt"
 
-main_content="use std::fs;
+main_content='use std::fs;
 use std::io::Write;
 
 fn main() -> std::io::Result<()> {
@@ -29,7 +29,7 @@ fn part1(input: &str) -> std::io::Result<()> {
 
 fn part2(input: &str) -> std::io::Result<()> {
     Ok(())
-}" 
+}'
 
 echo "$main_content" > "$dir_name/src/main.rs"
 
