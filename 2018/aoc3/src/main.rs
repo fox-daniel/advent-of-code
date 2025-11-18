@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
+/// Vertical distances are measured downward
 #[derive(Debug)]
 struct Claim {
     id: u32,
@@ -45,20 +45,26 @@ impl Claim {
         BBox {
             xmin: self.left_edge,
             xmax: self.left_edge + self.width,
-            ymin: self.top_edge + self.height,
-            ymax: self.top_edge,
+            ymin: self.top_edge,
+            ymax: self.top_edge + self.height,
         }
     }
 }
 
-struct Locations(Vec<(u32, u32)>);
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+struct Loc {
+    x: u32,
+    y: u32,
+}
+
+struct Locations(Vec<Loc>);
 
 impl BBox {
     fn locations(&self) -> Locations {
         let mut locations = Locations(Vec::new());
         for i in self.xmin..=self.xmax {
             for j in self.ymin..=self.ymax {
-                locations.0.push((i, j))
+                locations.0.push(Loc { x: i, y: j })
             }
         }
         locations
@@ -86,36 +92,16 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     let re = Regex::new(
         r"#(?<id>\d+) @ (?<left_edge>\d+),(?<top_edge>\d+): (?<width>\d+)x(?<height>\d+)",
     )?;
-    let mut claim: Claim;
     for line in input.lines() {
-        claim = re
-            .captures_iter(line)
-            .map(|c| Claim::from_capture(c))
-            .next()
-            .unwrap();
-        claims.push(claim);
+        claims.push(
+            re.captures_iter(line)
+                .map(|c| Claim::from_capture(c))
+                .next()
+                .unwrap(),
+        );
     }
-    writeln!(io::stdout(), "{:#?}", &claims[..3])?;
-    let max_height = claims.iter().fold(0, |acc, c| acc + c.height + c.top_edge);
-    let max_width = claims.iter().fold(0, |acc, c| acc + c.width + c.left_edge);
-    writeln!(
-        io::stdout(),
-        "max width: {}, max height: {}",
-        max_width,
-        max_height
-    )?;
 
-    let mut coverage = HashMap::<(u32, u32), u32>::new();
-    // Brute Force
-    // for i in 0..max_height {
-    //     for j in 0..max_width {
-    //         for claim in claims.iter() {
-    //             if claim_covers_point(i, j, claim) {
-    //                 coverage.entry((i, j)).and_modify(|c| *c += 1).or_insert(1);
-    //             }
-    //         }
-    //     }
-    // }
+    let mut coverage = HashMap::<Loc, u32>::new();
 
     // By Claim
     let mut bbox: BBox;
@@ -124,30 +110,24 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
         bbox = claim.bounding_box();
         locations = bbox.locations();
         update_coverage(&mut coverage, locations);
+        // println!("{:#?}", &coverage);
     }
-    for (k, v) in coverage.iter().take(3) {
-        println!("{:?}, {v}", k);
-    }
+    // for (k, v) in coverage.iter().take(3) {
+    //     println!("{:?}, {v}", k);
+    // }
     let disputed = coverage.into_values().filter(|v| *v > 1).count();
     writeln!(io::stdout(), "{disputed}")?;
     Ok(())
 }
 
-fn update_coverage(coverage: &mut HashMap<(u32, u32), u32>, locations: Locations) {
-    for (x, y) in locations.0.iter() {
-        println!("{x}, {y}");
+fn update_coverage(coverage: &mut HashMap<Loc, u32>, locations: Locations) {
+    for loc in locations.0.into_iter() {
+        // println!("{x}, {y}");
         coverage
-            .entry((*x, *y))
+            .entry(loc.clone())
             .and_modify(|c| *c += 1)
             .or_insert(1);
     }
-}
-
-fn claim_covers_point(i: u32, j: u32, claim: &Claim) -> bool {
-    (i >= claim.left_edge)
-        & (i <= (claim.left_edge + claim.width))
-        & (j >= claim.top_edge)
-        & (j <= (claim.top_edge + claim.height))
 }
 
 fn part2(input: &str) -> std::io::Result<()> {
@@ -157,6 +137,24 @@ fn part2(input: &str) -> std::io::Result<()> {
 #[cfg(test)]
 mod test {
     use super::*;
+    fn make_claims() -> Vec<Claim> {
+        let claim1 = Claim {
+            id: 0,
+            left_edge: 2,
+            top_edge: 3,
+            width: 2,
+            height: 3,
+        };
+        let claim2 = Claim {
+            id: 1,
+            left_edge: 3,
+            top_edge: 1,
+            width: 2,
+            height: 2,
+        };
+        vec![claim1, claim2]
+    }
+
     #[test]
     fn locations_from_bounding_box() {
         let bbox = BBox {
@@ -166,7 +164,24 @@ mod test {
             ymax: 4,
         };
         let locations = bbox.locations();
-        assert_eq!((1, 3), locations.0[0]);
+        let loc = &locations.0[0];
+        assert_eq!(&Loc { x: 1, y: 3 }, loc);
         assert_eq!(4, locations.0.len());
+    }
+
+    #[test]
+    fn bbox_from_claim() {
+        let claims = make_claims();
+        let bbox = claims[0].bounding_box();
+        assert_eq!(2, bbox.xmin);
+        assert_eq!(4, bbox.xmax);
+        assert_eq!(3, bbox.ymin);
+        assert_eq!(6, bbox.ymax);
+    }
+
+    #[test]
+    fn update_coverage_test() {
+        let claims = make_claims();
+        let mut coverage = HashMap::<Loc, u32>::new();
     }
 }
