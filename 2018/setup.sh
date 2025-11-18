@@ -7,6 +7,10 @@ cargo new "$dir_name"
 
 mkdir "$dir_name/input"
 
+session_cookie="$AOC_SESSION_COOKIE"
+
+curl -b "session=$session_cookie" "https://adventofcode.com/2018/day/$1/input" > "$dir_name/input/input.txt"
+
 main_content="use std::fs;
 use std::io::Write;
 
