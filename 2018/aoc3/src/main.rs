@@ -1,4 +1,5 @@
 use regex::Regex;
+use std::collections::HashMap;
 use std::fs;
 use std::io;
 use std::io::Write;
@@ -67,7 +68,26 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
         max_height
     )?;
 
+    let mut coverage = HashMap::<(u32, u32), u32>::new();
+    for i in 0..max_height {
+        for j in 0..max_width {
+            for claim in claims.iter() {
+                if claim_covers_point(i, j, claim) {
+                    coverage.entry((i, j)).and_modify(|c| *c += 1).or_insert(1);
+                }
+            }
+        }
+    }
+    let disputed = coverage.into_values().filter(|v| *v > 1).count();
+    writeln!(io::stdout(), "{disputed}")?;
     Ok(())
+}
+
+fn claim_covers_point(i: u32, j: u32, claim: &Claim) -> bool {
+    (i >= claim.left_edge)
+        & (i <= (claim.left_edge + claim.width))
+        & (j >= claim.top_edge)
+        & (j <= (claim.top_edge + claim.height))
 }
 
 fn part2(input: &str) -> std::io::Result<()> {
