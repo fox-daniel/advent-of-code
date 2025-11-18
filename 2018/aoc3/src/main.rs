@@ -44,9 +44,9 @@ impl Claim {
     fn bounding_box(&self) -> BBox {
         BBox {
             xmin: self.left_edge,
-            xmax: self.left_edge + self.width,
+            xmax: self.left_edge + self.width - 1,
             ymin: self.top_edge,
-            ymax: self.top_edge + self.height,
+            ymax: self.top_edge + self.height - 1,
         }
     }
 }
@@ -138,21 +138,30 @@ fn part2(input: &str) -> std::io::Result<()> {
 mod test {
     use super::*;
     fn make_claims() -> Vec<Claim> {
-        let claim1 = Claim {
-            id: 0,
-            left_edge: 2,
-            top_edge: 3,
-            width: 2,
-            height: 3,
-        };
-        let claim2 = Claim {
-            id: 1,
-            left_edge: 3,
-            top_edge: 1,
-            width: 2,
-            height: 2,
-        };
-        vec![claim1, claim2]
+        vec![
+            Claim {
+                id: 0,
+                left_edge: 2,
+                top_edge: 2,
+                width: 2,
+                height: 3,
+            },
+            // o o o o
+            // o o o o
+            // o o x x
+            // o o x x
+            // o o x x
+            Claim {
+                id: 1,
+                left_edge: 3,
+                top_edge: 1,
+                width: 2,
+                height: 2,
+            },
+            // o o o o o
+            // o o o x x
+            // o o o x x
+        ]
     }
 
     #[test]
@@ -174,14 +183,19 @@ mod test {
         let claims = make_claims();
         let bbox = claims[0].bounding_box();
         assert_eq!(2, bbox.xmin);
-        assert_eq!(4, bbox.xmax);
-        assert_eq!(3, bbox.ymin);
-        assert_eq!(6, bbox.ymax);
+        assert_eq!(3, bbox.xmax);
+        assert_eq!(2, bbox.ymin);
+        assert_eq!(4, bbox.ymax);
     }
 
     #[test]
     fn update_coverage_test() {
         let claims = make_claims();
         let mut coverage = HashMap::<Loc, u32>::new();
+        for claim in claims.iter() {
+            let locations = claim.bounding_box().locations();
+            update_coverage(&mut coverage, locations);
+        }
+        assert_eq!(2, *coverage.get(&Loc { x: 3, y: 2 }).unwrap())
     }
 }
