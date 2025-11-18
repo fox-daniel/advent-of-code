@@ -18,7 +18,7 @@ struct Claim {
     left_edge: u32,
     top_edge: u32,
     width: u32,
-    length: u32,
+    height: u32,
 }
 
 impl Claim {
@@ -28,7 +28,7 @@ impl Claim {
             left_edge: c["left_edge"].parse::<u32>().unwrap(),
             top_edge: c["top_edge"].parse::<u32>().unwrap(),
             width: c["width"].parse::<u32>().unwrap(),
-            length: c["length"].parse::<u32>().unwrap(),
+            height: c["height"].parse::<u32>().unwrap(),
         }
     }
 }
@@ -46,7 +46,7 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut claims: Vec<Claim> = vec![];
     let re = Regex::new(
-        r"#(?<id>\d+) @ (?<left_edge>\d+),(?<top_edge>\d+): (?<width>\d+)x(?<length>\d+)",
+        r"#(?<id>\d+) @ (?<left_edge>\d+),(?<top_edge>\d+): (?<width>\d+)x(?<height>\d+)",
     )?;
     let mut claim: Claim;
     for line in input.lines() {
