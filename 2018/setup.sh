@@ -31,5 +31,5 @@ fn part2(input: &str) -> std::io::Result<()> {
     Ok(())
 }" 
 
-echo "$main_content" > "$dir_name/main.rs"
+echo "$main_content" > "$dir_name/src/main.rs"
 
