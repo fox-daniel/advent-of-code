@@ -57,7 +57,7 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
             .unwrap();
         claims.push(claim);
     }
-    writeln!(io::stdout(), "{:#?}", claims[..3])?;
+    writeln!(io::stdout(), "{:#?}", &claims[..3])?;
     Ok(())
 }
 
