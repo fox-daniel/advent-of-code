@@ -22,6 +22,14 @@ struct Claim {
     height: u32,
 }
 
+#[derive(Debug)]
+struct BBox {
+    xmin: u32,
+    xmax: u32,
+    ymin: u32,
+    ymax: u32,
+}
+
 impl Claim {
     fn from_capture(c: regex::Captures) -> Self {
         Claim {
@@ -31,6 +39,29 @@ impl Claim {
             width: c["width"].parse::<u32>().unwrap(),
             height: c["height"].parse::<u32>().unwrap(),
         }
+    }
+
+    fn bounding_box(&self) -> BBox {
+        BBox {
+            xmin: self.left_edge,
+            xmax: self.left_edge + self.width,
+            ymin: self.top_edge + self.height,
+            ymax: self.top_edge,
+        }
+    }
+}
+
+struct Locations(Vec<(u32, u32)>);
+
+impl BBox {
+    fn points(&self) -> Locations {
+        let mut locations = Locations(Vec::new());
+        for i in self.xmin..self.xmax {
+            for j in self.ymin..self.ymax {
+                locations.0.push((i, j))
+            }
+        }
+        locations
     }
 }
 
@@ -75,18 +106,40 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     let mut coverage = HashMap::<(u32, u32), u32>::new();
-    for i in 0..max_height {
-        for j in 0..max_width {
-            for claim in claims.iter() {
-                if claim_covers_point(i, j, claim) {
-                    coverage.entry((i, j)).and_modify(|c| *c += 1).or_insert(1);
-                }
-            }
-        }
+    // Brute Force
+    // for i in 0..max_height {
+    //     for j in 0..max_width {
+    //         for claim in claims.iter() {
+    //             if claim_covers_point(i, j, claim) {
+    //                 coverage.entry((i, j)).and_modify(|c| *c += 1).or_insert(1);
+    //             }
+    //         }
+    //     }
+    // }
+
+    // By Claim
+    let mut bbox: BBox;
+    let mut locations: Locations;
+    for claim in claims.iter() {
+        bbox = claim.bounding_box();
+        locations = bbox.points();
+        update_coverage(&mut coverage, locations);
+    }
+    for (k, v) in coverage.iter().take(3) {
+        println!("{:?}, {v}", k);
     }
     let disputed = coverage.into_values().filter(|v| *v > 1).count();
     writeln!(io::stdout(), "{disputed}")?;
     Ok(())
+}
+
+fn update_coverage(coverage: &mut HashMap<(u32, u32), u32>, locations: Locations) {
+    for (x, y) in locations.0.iter() {
+        coverage
+            .entry((*x, *y))
+            .and_modify(|c| *c += 1)
+            .or_insert(1);
+    }
 }
 
 fn claim_covers_point(i: u32, j: u32, claim: &Claim) -> bool {
