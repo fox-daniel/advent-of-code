@@ -58,6 +58,14 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
         claims.push(claim);
     }
     writeln!(io::stdout(), "{:#?}", &claims[..3])?;
+    let max_height = claims.iter().fold(0, |acc, c| acc + c.height + c.top_edge);
+    let max_width = claims.iter().fold(0, |acc, c| acc + c.width + c.left_edge);
+    writeln!(
+        io::stdout(),
+        "max width: {}, max height: {}",
+        max_width,
+        max_height
+    )?;
 
     Ok(())
 }
