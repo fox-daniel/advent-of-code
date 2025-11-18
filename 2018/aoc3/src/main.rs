@@ -54,10 +54,10 @@ impl Claim {
 struct Locations(Vec<(u32, u32)>);
 
 impl BBox {
-    fn points(&self) -> Locations {
+    fn locations(&self) -> Locations {
         let mut locations = Locations(Vec::new());
-        for i in self.xmin..self.xmax {
-            for j in self.ymin..self.ymax {
+        for i in self.xmin..=self.xmax {
+            for j in self.ymin..=self.ymax {
                 locations.0.push((i, j))
             }
         }
@@ -122,7 +122,7 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     let mut locations: Locations;
     for claim in claims.iter() {
         bbox = claim.bounding_box();
-        locations = bbox.points();
+        locations = bbox.locations();
         update_coverage(&mut coverage, locations);
     }
     for (k, v) in coverage.iter().take(3) {
@@ -135,6 +135,7 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
 
 fn update_coverage(coverage: &mut HashMap<(u32, u32), u32>, locations: Locations) {
     for (x, y) in locations.0.iter() {
+        println!("{x}, {y}");
         coverage
             .entry((*x, *y))
             .and_modify(|c| *c += 1)
@@ -151,4 +152,21 @@ fn claim_covers_point(i: u32, j: u32, claim: &Claim) -> bool {
 
 fn part2(input: &str) -> std::io::Result<()> {
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn locations_from_bounding_box() {
+        let bbox = BBox {
+            xmin: 1,
+            xmax: 2,
+            ymin: 3,
+            ymax: 4,
+        };
+        let locations = bbox.locations();
+        assert_eq!((1, 3), locations.0[0]);
+        assert_eq!(4, locations.0.len());
+    }
 }
