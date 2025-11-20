@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Vertical distances are measured downward, so the top edge has a lower value than the bottom edge
 #[derive(Debug)]
 struct Claim {
-    id: u32,
+    _id: u32,
     left_edge: u32,
     top_edge: u32,
     width: u32,
@@ -33,7 +33,7 @@ struct BBox {
 impl Claim {
     fn from_capture(c: regex::Captures) -> Self {
         Claim {
-            id: c["id"].parse::<u32>().unwrap(),
+            _id: c["id"].parse::<u32>().unwrap(),
             left_edge: c["left_edge"].parse::<u32>().unwrap(),
             top_edge: c["top_edge"].parse::<u32>().unwrap(),
             width: c["width"].parse::<u32>().unwrap(),
@@ -191,7 +191,7 @@ mod test {
     fn make_claims() -> Vec<Claim> {
         vec![
             Claim {
-                id: 0,
+                _id: 0,
                 left_edge: 2,
                 top_edge: 2,
                 width: 2,
@@ -203,7 +203,7 @@ mod test {
             // o o x x
             // o o x x
             Claim {
-                id: 1,
+                _id: 1,
                 left_edge: 3,
                 top_edge: 1,
                 width: 2,
