@@ -1,5 +1,5 @@
 use regex::Regex;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io;
 use std::io::Write;
@@ -109,6 +109,7 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
         bbox = claim.bounding_box();
         locations = bbox.locations();
         update_coverage(&mut coverage, locations);
+    }
     let disputed = coverage.into_values().filter(|v| *v > 1).count();
     writeln!(io::stdout(), "{disputed}")?;
     Ok(())
@@ -123,8 +124,65 @@ fn update_coverage(coverage: &mut HashMap<Loc, u32>, locations: Locations) {
     }
 }
 
-fn part2(input: &str) -> std::io::Result<()> {
+fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // This could be more efficient. Because in part 1 I didn't need the
+    // ids for the solution, the abstractions (Loc) and methods (coverage) did
+    // not proagate them. But now we need the id for this. The current implementation
+    // needs a final iteration over the claims to retrieve the id; this could be
+    // avoided by propagating the id through to the coverage via Loc, where Loc would
+    // hold a Vec<Id> for all ids of claims for that location.
+    let mut claims: Vec<Claim> = vec![];
+    let re = Regex::new(
+        r"#(?<id>\d+) @ (?<left_edge>\d+),(?<top_edge>\d+): (?<width>\d+)x(?<height>\d+)",
+    )?;
+    for line in input.lines() {
+        claims.push(
+            re.captures_iter(line)
+                .map(|c| Claim::from_capture(c))
+                .next()
+                .unwrap(),
+        );
+    }
+
+    let mut coverage = HashMap::<Loc, u32>::new();
+
+    let mut bbox: BBox;
+    let mut locations: Locations;
+    for claim in claims.iter() {
+        bbox = claim.bounding_box();
+        locations = bbox.locations();
+        update_coverage(&mut coverage, locations);
+    }
+    let disputed: HashSet<Loc> = coverage
+        .iter()
+        .filter(|item| item.1 > &1)
+        .map(|item| item.0.clone())
+        .collect();
+    let undisputed: Vec<Loc> = coverage
+        .into_keys()
+        .filter(|k| !disputed.contains(k))
+        .collect();
+    let undisputed: Loc = undisputed[0].clone();
+    let undisputed_claims: Vec<Claim> = claims
+        .into_iter()
+        .filter(|c| loc_in_claim(&undisputed, c))
+        .collect();
+    writeln!(io::stdout(), "undisputed: {:#?}", undisputed_claims[0]).ok();
     Ok(())
+}
+
+// TODO
+// This can be made more efficient by using a containment check rather
+// than iterating over all locations in the claim; but this was faster to
+// code given the abstractions from part1
+fn loc_in_claim(loc: &Loc, claim: &Claim) -> bool {
+    let locations = claim.bounding_box().locations();
+    for ref_loc in locations.0.iter() {
+        if loc == ref_loc {
+            return true;
+        }
+    }
+    false
 }
 
 #[cfg(test)]
