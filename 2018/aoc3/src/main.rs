@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Vertical distances are measured downward, so the top edge has a lower value than the bottom edge
 #[derive(Debug)]
 struct Claim {
-    _id: u32,
+    id: u32,
     left_edge: u32,
     top_edge: u32,
     width: u32,
@@ -24,6 +24,7 @@ struct Claim {
 
 #[derive(Debug)]
 struct BBox {
+    id: u32,
     xmin: u32,
     xmax: u32,
     ymin: u32,
@@ -33,7 +34,7 @@ struct BBox {
 impl Claim {
     fn from_capture(c: regex::Captures) -> Self {
         Claim {
-            _id: c["id"].parse::<u32>().unwrap(),
+            id: c["id"].parse::<u32>().unwrap(),
             left_edge: c["left_edge"].parse::<u32>().unwrap(),
             top_edge: c["top_edge"].parse::<u32>().unwrap(),
             width: c["width"].parse::<u32>().unwrap(),
@@ -43,6 +44,7 @@ impl Claim {
 
     fn bounding_box(&self) -> BBox {
         BBox {
+            id: self.id,
             xmin: self.left_edge,
             xmax: self.left_edge + self.width - 1,
             ymin: self.top_edge,
@@ -57,7 +59,13 @@ struct Loc {
     y: u32,
 }
 
+struct Place {
+    loc: Loc,
+    id: u32,
+}
+
 struct Locations(Vec<Loc>);
+struct Places(Vec<Place>);
 
 impl BBox {
     fn locations(&self) -> Locations {
@@ -71,6 +79,20 @@ impl BBox {
     }
 }
 
+impl BBox {
+    fn places(&self) -> Places {
+        let mut places = Places(Vec::new());
+        for i in self.xmin..=self.xmax {
+            for j in self.ymin..=self.ymax {
+                places.0.push(Place {
+                    loc: Loc { x: i, y: j },
+                    id: self.id,
+                })
+            }
+        }
+        places
+    }
+}
 fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     // brute force:
     // 1. scan through data to determine max coordinates in each dimension: O(k)
@@ -124,13 +146,15 @@ fn update_coverage(coverage: &mut HashMap<Loc, u32>, locations: Locations) {
     }
 }
 
+fn update_coverage_for_places(coverage: &mut HashMap<Loc, Vec<u32>>, places: Places) {
+    for place in places.0.into_iter() {
+        coverage
+            .entry(place.loc.clone())
+            .and_modify(|v| v.push(place.id))
+            .or_insert(vec![place.id]);
+    }
+}
 fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
-    // This could be more efficient. Because in part 1 I didn't need the
-    // ids for the solution, the abstractions (Loc) and methods (coverage) did
-    // not proagate them. But now we need the id for this. The current implementation
-    // needs a final iteration over the claims to retrieve the id; this could be
-    // avoided by propagating the id through to the coverage via Loc, where Loc would
-    // hold a Vec<Id> for all ids of claims for that location.
     let mut claims: Vec<Claim> = vec![];
     let re = Regex::new(
         r"#(?<id>\d+) @ (?<left_edge>\d+),(?<top_edge>\d+): (?<width>\d+)x(?<height>\d+)",
@@ -144,30 +168,27 @@ fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    let mut coverage = HashMap::<Loc, u32>::new();
+    let mut coverage = HashMap::<Loc, Vec<u32>>::new();
 
     let mut bbox: BBox;
-    let mut locations: Locations;
+    let mut places: Places;
     for claim in claims.iter() {
         bbox = claim.bounding_box();
-        locations = bbox.locations();
-        update_coverage(&mut coverage, locations);
+        places = bbox.places();
+        update_coverage_for_places(&mut coverage, places);
     }
-    let disputed: HashSet<Loc> = coverage
-        .iter()
-        .filter(|item| item.1 > &1)
-        .map(|item| item.0.clone())
-        .collect();
-    let undisputed: Vec<Loc> = coverage
-        .into_keys()
-        .filter(|k| !disputed.contains(k))
-        .collect();
-    let undisputed: Loc = undisputed[0].clone();
-    let undisputed_claims: Vec<Claim> = claims
+    let disputed: HashSet<u32> = coverage
+        .clone()
         .into_iter()
-        .filter(|c| loc_in_claim(&undisputed, c))
+        .filter(|item| item.1.len() > 1)
+        .flat_map(|item| item.1.into_iter())
         .collect();
-    writeln!(io::stdout(), "undisputed: {:#?}", undisputed_claims[0]).ok();
+    let ids: HashSet<u32> = claims.into_iter().map(|c| c.id).collect();
+    let undisputed_claim = ids
+        .difference(&disputed)
+        .next()
+        .expect("There is a unique undisputed claim.");
+    writeln!(io::stdout(), "undisputed: {:#?}", undisputed_claim).ok();
     Ok(())
 }
 
@@ -191,7 +212,7 @@ mod test {
     fn make_claims() -> Vec<Claim> {
         vec![
             Claim {
-                _id: 0,
+                id: 0,
                 left_edge: 2,
                 top_edge: 2,
                 width: 2,
@@ -203,7 +224,7 @@ mod test {
             // o o x x
             // o o x x
             Claim {
-                _id: 1,
+                id: 1,
                 left_edge: 3,
                 top_edge: 1,
                 width: 2,
