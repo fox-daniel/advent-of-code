@@ -192,20 +192,6 @@ fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-// TODO
-// This can be made more efficient by using a containment check rather
-// than iterating over all locations in the claim; but this was faster to
-// code given the abstractions from part1
-fn loc_in_claim(loc: &Loc, claim: &Claim) -> bool {
-    let locations = claim.bounding_box().locations();
-    for ref_loc in locations.0.iter() {
-        if loc == ref_loc {
-            return true;
-        }
-    }
-    false
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
