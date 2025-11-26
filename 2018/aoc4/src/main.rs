@@ -1,8 +1,8 @@
 use anyhow::Context;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use regex::Regex;
+use std::collections::HashMap;
 use std::fs;
-use std::io::Write;
 use std::sync::LazyLock;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -21,12 +21,7 @@ struct Record {
     id: Option<u32>,
 }
 
-const RECORD_NOT_PARSED: &str = "record not parsed from input";
-
-#[derive(Debug)]
-struct ParseRecordError;
-
-const RE: LazyLock<Regex> = LazyLock::new(|| {
+static RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"\[(?<datetime>\d\d\d\d-\d\d-\d\d \d\d:\d\d)\] (?:.*(?<sleep>asleep|wakes)|Guard #(?<id>\d+))")
         .expect("regex compiles")
 });
@@ -61,10 +56,28 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     // O(n): using just time, not date, create hashmap<Minute, SleepCount>
     // O(n): iter fold to get max entry
     // id * minute
+    let mut records = Vec::<Record>::new();
     for line in input.lines() {
-        let record: Record = line.parse()?;
-        println!("{:?}", record.datetime);
+        records.push(line.parse()?);
     }
+
+    records.sort_by_key(|r| r.datetime);
+    // println!("{:#?}", &records[..3]);
+
+    let mut sleep_counts = HashMap::<u32, u32>::new();
+    let mut current_id = u32::MAX;
+    for record in records.iter() {
+        if record.id.is_some() && (record.id.unwrap() != current_id) {
+            current_id = record.id.unwrap();
+        }
+        if record.sleep.is_some() && record.sleep.unwrap() {
+            sleep_counts
+                .entry(current_id)
+                .and_modify(|c| *c += 1)
+                .or_insert(1);
+        }
+    }
+    // println!("{:#?}", sleep_counts);
 
     Ok(())
 }
