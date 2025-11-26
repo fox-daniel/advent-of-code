@@ -78,7 +78,15 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     // println!("{:#?}", sleep_counts);
-
+    let (id, _) = sleep_counts.iter().fold((u32::MAX, 0), |acc, item| {
+        if *item.1 > acc.1 {
+            (*item.0, *item.1)
+        } else {
+            acc
+        }
+    });
+    println!("{id}");
+    // in order to filter, one must check if the most recent id matches the target id
     Ok(())
 }
 
