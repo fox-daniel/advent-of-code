@@ -41,6 +41,8 @@ pub enum ClaimParseError {
     RegexCompilationError(usize),
     #[error("capture error")]
     CaptureError(String),
+    #[error("parse error")]
+    ParseError(#[from] std::num::ParseIntError),
     #[error("unknown parsing error")]
     Unknown,
 }
@@ -65,7 +67,11 @@ impl FromStr for Claim {
             )
             .expect("Regex compiles")
         });
-        if let Some(claim) = re.captures_iter(s).map(|c| Claim::from_capture(c)).next() {
+        if let Ok(claim) = re
+            .captures(s)
+            .ok_or_else(|| ClaimParseError::CaptureError(s.to_string()))
+            .and_then(|c| Claim::from_capture(c))
+        {
             Ok(claim)
         } else {
             Err(ClaimParseError::CaptureError(s.to_string()))
@@ -74,14 +80,14 @@ impl FromStr for Claim {
 }
 
 impl Claim {
-    fn from_capture(c: regex::Captures) -> Self {
-        Claim {
-            id: c["id"].parse().unwrap(),
-            left_edge: c["left_edge"].parse().unwrap(),
-            top_edge: c["top_edge"].parse().unwrap(),
-            width: c["width"].parse().unwrap(),
-            height: c["height"].parse().unwrap(),
-        }
+    fn from_capture(c: regex::Captures) -> Result<Self, ClaimParseError> {
+        Ok(Claim {
+            id: c["id"].parse()?,
+            left_edge: c["left_edge"].parse()?,
+            top_edge: c["top_edge"].parse()?,
+            width: c["width"].parse()?,
+            height: c["height"].parse()?,
+        })
     }
 
     fn bounding_box(&self) -> BBox {
@@ -193,16 +199,11 @@ fn update_coverage_for_places(coverage: &mut HashMap<Loc, Vec<u32>>, places: Pla
 }
 fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     let mut claims: Vec<Claim> = vec![];
-    let re = Regex::new(
-        r"#(?<id>\d+) @ (?<left_edge>\d+),(?<top_edge>\d+): (?<width>\d+)x(?<height>\d+)",
-    )?;
+
     for line in input.lines() {
-        claims.push(
-            re.captures_iter(line)
-                .map(|c| Claim::from_capture(c))
-                .next()
-                .unwrap(),
-        );
+        if let Ok(claim) = line.parse() {
+            claims.push(claim)
+        }
     }
 
     let mut coverage = HashMap::<Loc, Vec<u32>>::new();
