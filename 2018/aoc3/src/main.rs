@@ -33,29 +33,7 @@ struct BBox {
     ymax: u32,
 }
 
-#[derive(thiserror::Error, Debug)]
-pub enum ClaimParseError {
-    #[error("#[from] regex::Error")]
-    RegexSyntaxError(String),
-    #[error("#[from] regex::Error")]
-    RegexCompilationError(usize),
-    #[error("capture error")]
-    CaptureError(String),
-    #[error("parse error")]
-    ParseError(#[from] std::num::ParseIntError),
-    #[error("unknown parsing error")]
-    Unknown,
-}
-
-impl From<regex::Error> for ClaimParseError {
-    fn from(err: regex::Error) -> Self {
-        match err {
-            regex::Error::Syntax(msg) => Self::RegexSyntaxError(msg),
-            regex::Error::CompiledTooBig(msg) => Self::RegexCompilationError(msg),
-            _ => Self::Unknown,
-        }
-    }
-}
+struct ClaimParseError(String);
 
 impl FromStr for Claim {
     type Err = ClaimParseError;
@@ -67,20 +45,15 @@ impl FromStr for Claim {
             )
             .expect("Regex compiles")
         });
-        if let Ok(claim) = re
+        let cap = re
             .captures(s)
-            .ok_or_else(|| ClaimParseError::CaptureError(s.to_string()))
-            .and_then(|c| Claim::from_capture(c))
-        {
-            Ok(claim)
-        } else {
-            Err(ClaimParseError::CaptureError(s.to_string()))
-        }
+            .ok_or(ClaimParseError("claim syntax error".to_string()))?;
+        Claim::from_capture(cap).map_err(|e| ClaimParseError(e.to_string()))
     }
 }
 
 impl Claim {
-    fn from_capture(c: regex::Captures) -> Result<Self, ClaimParseError> {
+    fn from_capture(c: regex::Captures) -> Result<Self, std::num::ParseIntError> {
         Ok(Claim {
             id: c["id"].parse()?,
             left_edge: c["left_edge"].parse()?,
