@@ -98,9 +98,7 @@ impl BBox {
         }
         locations
     }
-}
 
-impl BBox {
     fn places(&self) -> Places {
         let mut places = Places(Vec::new());
         for i in self.xmin..=self.xmax {
@@ -115,22 +113,6 @@ impl BBox {
     }
 }
 fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
-    // brute force:
-    // 1. scan through data to determine max coordinates in each dimension: O(k)
-    // 2. double for loop over dimensions; for each iteration check if each id covers that and update a dict: O(k*n^2)
-    // 3. iterate over dict and count entries where val is >=2
-    //
-    // Potential performance improvements: use an r-tree type structure
-    //
-    // By Claims:
-    // - create a counts: HashMap<Location, u32> that counts claims in a location
-    // - iterate through claims and for each point in the claim update the counts
-    //
-    // By Grid Chunks:
-    // - divide into disjoint groups with a union find: cons: it is possible that they will all be in one group;
-    // - divide grid into chunks and create a lookup of which id's have claims that overlap that chunk;
-    // for each chunk use brute force. how to chunk?
-
     let mut claims: Vec<Claim> = vec![];
 
     for line in input.lines() {
