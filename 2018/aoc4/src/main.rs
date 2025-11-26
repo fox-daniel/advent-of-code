@@ -65,7 +65,7 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     // println!("{:#?}", &records[..3]);
 
     let mut sleep_counts = HashMap::<u32, u32>::new();
-    let mut current_id = u32::MAX;
+    let mut current_id = records[0].id.unwrap();
     for record in records.iter() {
         if record.id.is_some() && (record.id.unwrap() != current_id) {
             current_id = record.id.unwrap();
@@ -87,6 +87,16 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     });
     println!("{id}");
     // in order to filter, one must check if the most recent id matches the target id
+    // current_id = records[0].id.unwrap();
+    records = records
+        .into_iter()
+        .filter(|record| {
+            if record.id.is_some() && (record.id.unwrap() != current_id) {
+                current_id = record.id.unwrap();
+            }
+            if current_id == id { true } else { false }
+        })
+        .collect();
     Ok(())
 }
 
