@@ -3,6 +3,8 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io;
 use std::io::Write;
+use std::str::FromStr;
+use std::sync::LazyLock;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = fs::read_to_string("input/input.txt")?;
@@ -31,14 +33,54 @@ struct BBox {
     ymax: u32,
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum ClaimParseError {
+    #[error("#[from] regex::Error")]
+    RegexSyntaxError(String),
+    #[error("#[from] regex::Error")]
+    RegexCompilationError(usize),
+    #[error("capture error")]
+    CaptureError(String),
+    #[error("unknown parsing error")]
+    Unknown,
+}
+
+impl From<regex::Error> for ClaimParseError {
+    fn from(err: regex::Error) -> Self {
+        match err {
+            regex::Error::Syntax(msg) => Self::RegexSyntaxError(msg),
+            regex::Error::CompiledTooBig(msg) => Self::RegexCompilationError(msg),
+            _ => Self::Unknown,
+        }
+    }
+}
+
+impl FromStr for Claim {
+    type Err = ClaimParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let re: LazyLock<Regex> = LazyLock::new(|| {
+            Regex::new(
+                r"#(?<id>\d+) @ (?<left_edge>\d+),(?<top_edge>\d+): (?<width>\d+)x(?<height>\d+)",
+            )
+            .expect("Regex compiles")
+        });
+        if let Some(claim) = re.captures_iter(s).map(|c| Claim::from_capture(c)).next() {
+            Ok(claim)
+        } else {
+            Err(ClaimParseError::CaptureError(s.to_string()))
+        }
+    }
+}
+
 impl Claim {
     fn from_capture(c: regex::Captures) -> Self {
         Claim {
-            id: c["id"].parse::<u32>().unwrap(),
-            left_edge: c["left_edge"].parse::<u32>().unwrap(),
-            top_edge: c["top_edge"].parse::<u32>().unwrap(),
-            width: c["width"].parse::<u32>().unwrap(),
-            height: c["height"].parse::<u32>().unwrap(),
+            id: c["id"].parse().unwrap(),
+            left_edge: c["left_edge"].parse().unwrap(),
+            top_edge: c["top_edge"].parse().unwrap(),
+            width: c["width"].parse().unwrap(),
+            height: c["height"].parse().unwrap(),
         }
     }
 
@@ -111,16 +153,11 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     // for each chunk use brute force. how to chunk?
 
     let mut claims: Vec<Claim> = vec![];
-    let re = Regex::new(
-        r"#(?<id>\d+) @ (?<left_edge>\d+),(?<top_edge>\d+): (?<width>\d+)x(?<height>\d+)",
-    )?;
+
     for line in input.lines() {
-        claims.push(
-            re.captures_iter(line)
-                .map(|c| Claim::from_capture(c))
-                .next()
-                .unwrap(),
-        );
+        if let Ok(claim) = line.parse() {
+            claims.push(claim)
+        }
     }
 
     let mut coverage = HashMap::<Loc, u32>::new();
@@ -225,6 +262,7 @@ mod test {
     #[test]
     fn locations_from_bounding_box() {
         let bbox = BBox {
+            id: 1234,
             xmin: 1,
             xmax: 2,
             ymin: 3,
