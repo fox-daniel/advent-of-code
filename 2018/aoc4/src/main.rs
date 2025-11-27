@@ -1,8 +1,9 @@
 use anyhow::Context;
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Timelike, Utc};
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
+use std::io::{self, Write};
 use std::sync::LazyLock;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -88,15 +89,26 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("{id}");
     // in order to filter, one must check if the most recent id matches the target id
     // current_id = records[0].id.unwrap();
-    records = records
-        .into_iter()
-        .filter(|record| {
-            if record.id.is_some() && (record.id.unwrap() != current_id) {
-                current_id = record.id.unwrap();
-            }
-            if current_id == id { true } else { false }
-        })
-        .collect();
+    records.retain_mut(|record| {
+        if record.id.is_some() && (record.id.unwrap() != current_id) {
+            current_id = record.id.unwrap();
+        }
+        current_id == id
+    });
+    let mut minute_counts = HashMap::<u32, u32>::new();
+    for record in records.iter() {
+        let minute = record.datetime.minute();
+        minute_counts
+            .entry(minute)
+            .and_modify(|c| *c += 1)
+            .or_insert(1);
+    }
+    let max_item = minute_counts
+        .iter()
+        .max_by_key(|item| *item.1)
+        .expect("obtain max minute by count");
+    writeln!(io::stdout(), "max minute: {}", max_item.0).ok();
+    writeln!(io::stdout(), "answer: {}", max_item.0 * id).ok();
     Ok(())
 }
 
