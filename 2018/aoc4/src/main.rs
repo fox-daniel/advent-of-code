@@ -63,18 +63,29 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     sort_records(&mut records);
-
+    println!("{records:#?}");
     let mut sleep_counts = HashMap::<u32, u32>::new();
     let mut current_id = records[0].id.unwrap();
+    let mut sleep_start: DateTime<Utc> = records[0].datetime;
     for record in records.iter() {
         if record.id.is_some() && (record.id.unwrap() != current_id) {
             current_id = record.id.unwrap();
+            continue;
         }
         if record.sleep.is_some() && record.sleep.unwrap() {
+            sleep_start = record.datetime;
+            continue;
+        }
+        if record.sleep.is_some() && !record.sleep.unwrap() {
+            let duration = record
+                .datetime
+                .signed_duration_since(sleep_start)
+                .num_minutes();
+            let duration = duration as u32;
             sleep_counts
                 .entry(current_id)
-                .and_modify(|c| *c += 1)
-                .or_insert(1);
+                .and_modify(|c| *c += duration)
+                .or_insert(duration);
         }
     }
     println!("{:#?}", sleep_counts);
