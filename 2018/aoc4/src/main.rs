@@ -105,13 +105,24 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
         }
         current_id == id
     });
+    // println!("{records:#?}");
     let mut minute_counts = HashMap::<u32, u32>::new();
+    let mut sleep_start_minute = records[1].datetime.minute();
+    let mut sleep_stop_minute = records[2].datetime.minute();
     for record in records.iter() {
-        let minute = record.datetime.minute();
-        minute_counts
-            .entry(minute)
-            .and_modify(|c| *c += 1)
-            .or_insert(1);
+        if record.sleep.is_some_and(|sleep| sleep) {
+            sleep_start_minute = record.datetime.minute();
+            continue;
+        }
+        if record.sleep.is_some_and(|sleep| !sleep) {
+            sleep_stop_minute = record.datetime.minute();
+            for minute in sleep_start_minute..sleep_stop_minute {
+                minute_counts
+                    .entry(minute)
+                    .and_modify(|c| *c += 1)
+                    .or_insert(1);
+            }
+        }
     }
     let max_item = minute_counts
         .iter()
