@@ -100,7 +100,7 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     // in order to filter, one must check if the most recent id matches the target id
     // current_id = records[0].id.unwrap();
     records.retain_mut(|record| {
-        if record.id.is_some() && (record.id.unwrap() != current_id) {
+        if record.id.is_some() {
             current_id = record.id.unwrap();
         }
         current_id == id
