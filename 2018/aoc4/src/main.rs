@@ -137,8 +137,64 @@ fn sort_records(records: &mut [Record]) {
     records.sort_by_key(|r| r.datetime);
 }
 
-fn part2(input: &str) -> std::io::Result<()> {
+fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let mut records = Vec::<Record>::new();
+    for line in input.lines() {
+        records.push(line.parse()?);
+    }
+
+    sort_records(&mut records);
+    println!("{records:#?}");
+    let mut sleep_counts = GuardSleep::new();
+    let mut current_id = records[0].id.unwrap();
+    let mut sleep_start: DateTime<Utc> = records[0].datetime;
+    for record in records.iter() {
+        // identify start of new guard
+        // identify start of sleep
+        // identify end of sleep
+        // add to tally for guard
+        if record.id.is_some() && (record.id.unwrap() != current_id) {
+            current_id = record.id.unwrap();
+            continue;
+        }
+        if record.sleep.is_some() && record.sleep.unwrap() {
+            sleep_start = record.datetime;
+            continue;
+        }
+        if record.sleep.is_some() && !record.sleep.unwrap() {
+            let duration = record
+                .datetime
+                .signed_duration_since(sleep_start)
+                .num_minutes();
+            let sleep_end = sleep_start.minute() + (duration as u32);
+            for min in sleep_start.minute()..sleep_end {
+                // println!("guard_id={current_id}, min={min}");
+                let gc = sleep_counts
+                    .counts
+                    .entry(current_id as GuardId)
+                    .or_default();
+                gc.entry(min).and_modify(|c| *c += 1).or_insert(1);
+            }
+        }
+        println!("{sleep_counts:#?}");
+    }
+
     Ok(())
+}
+
+type GuardId = u32;
+
+#[derive(Debug)]
+struct GuardSleep {
+    counts: HashMap<GuardId, HashMap<u32, u32>>,
+}
+
+impl GuardSleep {
+    fn new() -> Self {
+        Self {
+            counts: HashMap::<GuardId, HashMap<u32, u32>>::new(),
+        }
+    }
 }
 
 #[cfg(test)]
