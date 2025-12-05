@@ -178,7 +178,19 @@ fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     println!("{sleep_counts:#?}");
-
+    let mut guard_id: GuardId = 0;
+    let mut minute = 61u32;
+    let mut max_count = 0u32;
+    for (gid, gc) in sleep_counts.counts.into_iter() {
+        for (current_minute, current_count) in gc.into_iter() {
+            if current_count > max_count {
+                max_count = current_count;
+                minute = current_minute;
+                guard_id = gid;
+            }
+        }
+    }
+    println!("guard_id*minute={}", guard_id * minute);
     Ok(())
 }
 
