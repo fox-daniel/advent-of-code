@@ -63,7 +63,6 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     sort_records(&mut records);
-    println!("{records:#?}");
     let mut sleep_counts = HashMap::<u32, u32>::new();
     let mut current_id = records[0].id.unwrap();
     let mut sleep_start: DateTime<Utc> = records[0].datetime;
@@ -88,7 +87,6 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
                 .or_insert(duration);
         }
     }
-    println!("{:#?}", sleep_counts);
     let (id, _) = sleep_counts.iter().fold((u32::MAX, 0), |acc, item| {
         if *item.1 > acc.1 {
             (*item.0, *item.1)
@@ -96,7 +94,6 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
             acc
         }
     });
-    println!("{id}");
     // in order to filter, one must check if the most recent id matches the target id
     // current_id = records[0].id.unwrap();
     records.retain_mut(|record| {
@@ -105,7 +102,6 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
         }
         current_id == id
     });
-    // println!("{records:#?}");
     let mut minute_counts = HashMap::<u32, u32>::new();
     let mut sleep_start_minute = records[1].datetime.minute();
     let mut sleep_stop_minute = records[2].datetime.minute();
@@ -144,7 +140,6 @@ fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     sort_records(&mut records);
-    println!("{records:#?}");
     let mut sleep_counts = GuardSleep::new();
     let mut current_id = records[0].id.unwrap();
     let mut sleep_start: DateTime<Utc> = records[0].datetime;
@@ -168,7 +163,6 @@ fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
                 .num_minutes();
             let sleep_end = sleep_start.minute() + (duration as u32);
             for min in sleep_start.minute()..sleep_end {
-                // println!("guard_id={current_id}, min={min}");
                 let gc = sleep_counts
                     .counts
                     .entry(current_id as GuardId)
@@ -177,7 +171,6 @@ fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    println!("{sleep_counts:#?}");
     let mut guard_id: GuardId = 0;
     let mut minute = 61u32;
     let mut max_count = 0u32;
