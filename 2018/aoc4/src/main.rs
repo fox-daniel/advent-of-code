@@ -176,8 +176,8 @@ fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
                 gc.entry(min).and_modify(|c| *c += 1).or_insert(1);
             }
         }
-        println!("{sleep_counts:#?}");
     }
+    println!("{sleep_counts:#?}");
 
     Ok(())
 }
