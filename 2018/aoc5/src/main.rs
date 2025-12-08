@@ -12,17 +12,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     let result = part1_result(input);
-    writeln!(std::io::stdout(), "{result}").ok();
     writeln!(std::io::stdout(), "length: {}", result.len()).ok();
     Ok(())
 }
 
 fn part1_result(s: &str) -> String {
     let mut prefix: Vec<char> = vec![];
-    let protein: Vec<char> = s.chars().collect();
+    let mut protein: Vec<char> = s.chars().collect();
+    if protein.last().unwrap() == &'\n' {
+        protein.pop();
+    }
     let len = protein.len();
     let mut idx = 0;
-    // println!("{protein:#?}");
     while idx < len {
         let mut c1 = protein[idx];
         if prefix.is_empty() {
@@ -34,10 +35,7 @@ fn part1_result(s: &str) -> String {
                 break;
             }
         }
-        // println!("prefix={prefix:?}, idx={idx}");
         if annihilate(c1, *prefix.last().unwrap()) {
-            // println!("found pair to annihilate:");
-            // println!("prefix={prefix:?}, idx={idx}");
             prefix.pop();
             idx += 1;
             continue;
