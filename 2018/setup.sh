@@ -24,11 +24,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn part1(input: &str) -> std::io::Result<()> {
+fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn part2(input: &str) -> std::io::Result<()> {
+fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }'
 
