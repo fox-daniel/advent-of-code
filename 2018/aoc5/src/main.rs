@@ -16,12 +16,16 @@ fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn part1_result(s: &str) -> String {
-    let mut prefix: Vec<char> = vec![];
+fn part1_result(s: &str) -> Vec<char> {
     let mut protein: Vec<char> = s.chars().collect();
     if protein.last().unwrap() == &'\n' {
         protein.pop();
     }
+    react(&mut protein)
+}
+
+fn react(protein: &mut [char]) -> Vec<char> {
+    let mut prefix: Vec<char> = vec![];
     let len = protein.len();
     let mut idx = 0;
     while idx < len {
@@ -44,7 +48,7 @@ fn part1_result(s: &str) -> String {
             idx += 1;
         }
     }
-    prefix.iter().collect()
+    prefix.into_iter().collect()
 }
 
 fn annihilate(c1: char, c2: char) -> bool {
