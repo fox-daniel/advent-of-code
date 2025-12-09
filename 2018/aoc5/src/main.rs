@@ -2,7 +2,9 @@ use std::cmp::min;
 use std::fs;
 use std::io::Write;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
+fn main() -> Result<()> {
     let input = fs::read_to_string("input/input.txt")?;
 
     part1(&input)?;
@@ -11,7 +13,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn part1(input: &str) -> Result<()> {
     let result = part1_result(input);
     writeln!(std::io::stdout(), "length: {}", result.len()).ok();
     Ok(())
@@ -57,7 +59,7 @@ fn annihilate(c1: char, c2: char) -> bool {
         & (c1.to_lowercase().next() == c2.to_lowercase().next())
 }
 
-fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn part2(input: &str) -> Result<()> {
     let result = part1_result(input);
     let mut min_len = u32::MAX;
     for c in 'a'..='z' {
