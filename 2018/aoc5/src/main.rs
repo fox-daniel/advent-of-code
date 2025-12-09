@@ -14,8 +14,7 @@ fn main() -> Result<()> {
 }
 
 fn part1(input: &str) -> Result<()> {
-    let result = part1_result(input);
-    writeln!(std::io::stdout(), "length: {}", result.len()).ok();
+    writeln!(std::io::stdout(), "length: {}", part1_result(input).len()).ok();
     Ok(())
 }
 

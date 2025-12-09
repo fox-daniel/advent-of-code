@@ -14,8 +14,9 @@ curl -b "session=$session_cookie" "https://adventofcode.com/2018/day/$1/input" >
 main_content='use std::fs;
 use std::io::Write;
 
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<()> {
     let input = fs::read_to_string("input/input.txt")?;
 
     part1(&input)?;
@@ -24,11 +25,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn part1(input: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn part1(input: &str) -> Result<()> {
     Ok(())
 }
 
-fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn part2(input: &str) -> Result<()> {
     Ok(())
 }'
 
