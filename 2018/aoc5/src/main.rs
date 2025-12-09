@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::fs;
 use std::io::Write;
 
@@ -58,8 +59,22 @@ fn annihilate(c1: char, c2: char) -> bool {
 
 fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
     let result = part1_result(input);
-
+    let mut min_len = u32::MAX;
+    for c in 'a'..='z' {
+        let mut clean = result.clone();
+        clean = remove_impurities(clean, c);
+        clean = react(&mut clean);
+        min_len = min(min_len, clean.len() as u32)
+    }
+    writeln!(std::io::stdout(), "min length={min_len}").ok();
     Ok(())
+}
+
+fn remove_impurities(clean: Vec<char>, m: char) -> Vec<char> {
+    clean
+        .into_iter()
+        .filter(|c| c.to_lowercase().next() != Some(m))
+        .collect()
 }
 
 #[cfg(test)]
