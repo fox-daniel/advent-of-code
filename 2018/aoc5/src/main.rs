@@ -56,7 +56,9 @@ fn annihilate(c1: char, c2: char) -> bool {
         & (c1.to_lowercase().next() == c2.to_lowercase().next())
 }
 
-fn part2(_input: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn part2(input: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let result = part1_result(input);
+
     Ok(())
 }
 
@@ -79,28 +81,30 @@ mod test {
     fn part1_test1() {
         let input = "abcCBA";
         let result = part1_result(input);
-        println!("result={result}");
+        println!("result={result:?}");
         assert_eq!(result.len(), 0);
     }
     #[test]
     fn part1_test2() {
         let input = "dabcCBA";
         let result = part1_result(input);
-        println!("result={result}");
+        println!("result={result:?}");
         assert_eq!(result.len(), 1);
     }
     #[test]
     fn part1_test3() {
         let input = "dabAcCaCBAcCcaDA";
         let result = part1_result(input);
-        println!("result={result}");
+        let result: String = result.into_iter().collect();
+        println!("result={result:?}");
         assert_eq!(&result, "dabCBAcaDA");
     }
     #[test]
     fn part1_test4() {
         let input = "abcdeEDCfghIiHGkl";
         let result = part1_result(input);
-        println!("result={result}");
+        let result: String = result.into_iter().collect();
+        println!("result={result:?}");
         assert_eq!(&result, "abfkl");
     }
 }
