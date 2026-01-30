@@ -43,7 +43,7 @@ fn part1(input: &str) -> Result<()> {
     //
     //
     let points: Vec<Point> = input.lines().map(Point::from).collect();
-    println!("{:?}", &points[..3]);
+    let mut area_map = HashMap::<Point, usize>::new();
     let mut territory = HashMap::<Point, Status>::new();
     let mut bb = BoundingBox::new(points[0].x, points[0].y, points[0].x, points[0].y);
     bb = points.iter().fold(bb, |mut bb, point| {
@@ -60,10 +60,11 @@ fn part1(input: &str) -> Result<()> {
     bb.ymin -= hheight;
     bb.ymax += hheight;
     let max_distance = (bb.xmax - bb.xmin + bb.ymax - bb.ymin) / 2;
+    println!("max distance: {max_distance}");
     for distance in 1..=max_distance {
-        for point in points.iter() {
-            let points_at_a_distance = get_points_at_a_distance(point, distance as usize);
-            // println!("{points_at_a_distance:?}");
+        for ref_point in points.iter() {
+            let points_at_a_distance = get_points_at_a_distance(ref_point, distance as usize);
+            // println!("num points at a distance: {}", points_at_a_distance.len());
             for point in points_at_a_distance.iter() {
                 territory
                     .entry(point.clone())
@@ -76,12 +77,23 @@ fn part1(input: &str) -> Result<()> {
                         }
                     })
                     .or_insert(Status::Assigned(Assignment {
-                        reference: point.clone(),
+                        reference: ref_point.clone(),
                         distance: distance as usize,
                     }));
             }
         }
     }
+    territory.iter().for_each(|(_, v)| {
+        if let Status::Assigned(Assignment {
+            reference,
+            ..
+        }) = v {
+            area_map.entry(reference.clone()).and_modify(|count| *count += 1).or_insert(1);
+        }
+    });
+    println!("{area_map:?}");
+    let max_area = area_map.iter().max_by_key(|item| item.1);
+    println!("part1: {max_area:?}"); 
     Ok(())
 }
 
