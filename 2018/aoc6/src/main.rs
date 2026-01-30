@@ -34,7 +34,7 @@ fn part1(input: &str) -> Result<()> {
             update_assignments(ref_point, dist, &mut territory);
         }
     }
-    let boundary_points: HashSet<Point>  = bb.get_boundary_points().iter().cloned().collect();
+    let boundary_points: HashSet<Point>  = bb.get_boundary_points();
     territory.iter().filter(|(p, _)| !boundary_points.contains(p)).for_each(|(_, v)| {
         if let Status::Assigned(Assignment {
             reference,
@@ -70,12 +70,6 @@ fn update_assignments(ref_point: &Point, dist: usize, territory: &mut HashMap<Po
     }
 }
 
-fn is_on_outer_boundary(point: &Point, bb: &BoundingBox) -> bool {
-    point.x == bb.xmin
-    || point.x == bb.xmax
-    || point.y == bb.ymin
-    || point.y == bb.ymax
-}
 // would be better to use a generator here
 fn get_points_at_a_distance(point: &Point, distance: usize, territory: &HashMap<Point, Status>) -> Vec<Point> {
     let mut points = Vec::new();
@@ -177,16 +171,16 @@ impl BoundingBox {
         (self.xmax - self.xmin) as usize
     }
 
-    fn get_boundary_points(&self) -> Vec<Point> {
-        let mut points = Vec::new();
+    fn get_boundary_points(&self) -> HashSet<Point> {
+        let mut points = HashSet::new();
         for i in 0..=self.height() {
-            points.push(
+            points.insert(
                 Point {
                     x: self.xmin,
                     y: self.ymin + i as i32,
                 }
             );
-            points.push(
+            points.insert(
                 Point {
                     x: self.xmax,
                     y: self.ymin + i as i32,
@@ -194,13 +188,13 @@ impl BoundingBox {
             );
         }
         for i in 1..self.width() {
-            points.push(
+            points.insert(
                 Point {
                     x: self.xmin + i as i32,
                     y: self.ymin,
                 }
             );
-            points.push(
+            points.insert(
                 Point {
                     x: self.xmin + i as i32,
                     y: self.ymax,
