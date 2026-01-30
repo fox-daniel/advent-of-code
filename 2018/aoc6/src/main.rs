@@ -204,12 +204,22 @@ fn part2(input: &str) -> Result<()> {
 mod test {
     use super::*;
     #[test]
-    fn test_bb_construction() {
+    fn test_bb_construction_2_points() {
         let points = vec![Point {x:1,y:1}, Point {x:-1, y:0}];
         let bb = BoundingBox::from_points(&points);
         assert_eq!(bb.xmin, -1);        
         assert_eq!(bb.ymin, 0);        
         assert_eq!(bb.xmax, 1);        
         assert_eq!(bb.ymax, 1);        
+    }
+    
+    #[test]
+    fn test_bb_construction_4_points() {
+        let points = vec![Point {x:3,y:5}, Point {x:-3, y:0}, Point {x:0, y:0}, Point {x:2, y:-4}];
+        let bb = BoundingBox::from_points(&points);
+        assert_eq!(bb.xmin, -3);        
+        assert_eq!(bb.ymin,-4);        
+        assert_eq!(bb.xmax, 3);        
+        assert_eq!(bb.ymax, 5);        
     }
 }
