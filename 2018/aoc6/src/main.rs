@@ -45,29 +45,14 @@ fn part1(input: &str) -> Result<()> {
     let mut area_map = HashMap::<Point, usize>::new();
     let mut territory = HashMap::<Point, Status>::new();
     let mut bb = BoundingBox::from_points(&points);
+    // make the bounding box big enough such that the following holds:
+    // - if a boundary point references a point then that point will have infinite area
     bb.expand();
     let max_distance = bb.max_distance();
     println!("max distance: {max_distance}");
     for dist in 1..=max_distance {
         for ref_point in points.iter() {
-            let points_at_a_distance = get_points_at_a_distance(ref_point, dist);
-            // println!("num points at a distance: {}", points_at_a_distance.len());
-            for point in points_at_a_distance.iter() {
-                territory
-                    .entry(point.clone())
-                    .and_modify(|e| {
-                        if let Status::Assigned(Assignment {
-                            distance: distance_to_ref,
-                            ..
-                        }) = e && dist == *distance_to_ref {
-                                *e = Status::Tied;
-                        }
-                    })
-                    .or_insert(Status::Assigned(Assignment {
-                        reference: ref_point.clone(),
-                        distance: dist,
-                    }));
-            }
+            update_assignments(ref_point, dist, &mut territory);
         }
     }
     let on_boundary = |point: &Point| is_on_outer_boundary(point, &bb);
@@ -86,6 +71,26 @@ fn part1(input: &str) -> Result<()> {
     Ok(())
 }
 
+fn update_assignments(ref_point: &Point, dist: usize, territory: &mut HashMap<Point, Status>) {
+    let points_at_a_distance = get_points_at_a_distance(ref_point, dist, territory);
+    // println!("num points at a distance: {}", points_at_a_distance.len());
+    for point in points_at_a_distance.iter() {
+        territory
+            .entry(point.clone())
+            .and_modify(|e| {
+                if let Status::Assigned(Assignment {
+                    distance: distance_to_ref,
+                    ..
+                }) = e && dist == *distance_to_ref {
+                        *e = Status::Tied;
+                }
+            })
+            .or_insert(Status::Assigned(Assignment {
+                reference: ref_point.clone(),
+                distance: dist,
+            }));
+    }
+}
 
 fn is_on_outer_boundary(point: &Point, bb: &BoundingBox) -> bool {
     point.x == bb.xmin
@@ -94,28 +99,36 @@ fn is_on_outer_boundary(point: &Point, bb: &BoundingBox) -> bool {
     || point.y == bb.ymax
 }
 // would be better to use a generator here
-fn get_points_at_a_distance(point: &Point, distance: usize) -> Vec<Point> {
-    let mut points = Vec::with_capacity(4 * distance);
+fn get_points_at_a_distance(point: &Point, distance: usize, territory: &HashMap<Point, Status>) -> Vec<Point> {
+    let mut points = Vec::new();
     let x = point.x;
     let y = point.y;
     for j in 0..distance {
         let dist = distance as i32;
-        points.push(Point {
+        let p1 = Point {
             x: x - j as i32,
             y: y + dist - j as i32,
-        });
-        points.push(Point {
+        };
+        let p2 = Point {
             x: x - dist + j as i32,
             y: y - j as i32,
-        });
-        points.push(Point {
+        };
+        let p3 = Point {
             x: x + j as i32,
             y: y - dist + j as i32,
-        });
-        points.push(Point {
+        };
+        let p4 = Point {
             x: x + dist - j as i32,
             y: y + j as i32,
-        });
+        };
+        for p in [p1, p2, p3, p4] {
+            if territory.get(&p).is_none() {
+                points.push(p);
+            }
+            else if let Some(Status::Assigned(_)) = territory.get(&p) {
+                points.push(p);
+            }
+        }
     }
     points
 }
@@ -222,4 +235,16 @@ mod test {
         assert_eq!(bb.xmax, 3);        
         assert_eq!(bb.ymax, 5);        
     }
+
+    #[test]
+    fn test_bb_expand() {
+        let points = vec![Point {x:1,y:1}, Point {x:-1, y:0}];
+        let mut bb = BoundingBox::from_points(&points);
+        bb.expand();
+        assert_eq!(bb.xmin, -3);        
+        assert_eq!(bb.ymin, -1);        
+        assert_eq!(bb.xmax, 3);        
+        assert_eq!(bb.ymax, 2);        
+    }
+    
 }
