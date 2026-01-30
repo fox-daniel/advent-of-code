@@ -1,7 +1,5 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
-// use std::io::Write;
-use std::cmp;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -31,7 +29,8 @@ fn part1(input: &str) -> Result<()> {
     //     - find points at distance n from
     //     - assign if not assigned
     //     - handle ties: if assigned is same distance, switch to tie sentinal
-    //     - memoize
+    //
+    // need to filter out points with infinite area
     //
     //
     //
@@ -45,45 +44,35 @@ fn part1(input: &str) -> Result<()> {
     let points: Vec<Point> = input.lines().map(Point::from).collect();
     let mut area_map = HashMap::<Point, usize>::new();
     let mut territory = HashMap::<Point, Status>::new();
-    let mut bb = BoundingBox::new(points[0].x, points[0].y, points[0].x, points[0].y);
-    bb = points.iter().fold(bb, |mut bb, point| {
-        bb.xmin = i32::min(bb.xmin, point.x);
-        bb.xmax = i32::max(bb.xmax, point.x);
-        bb.ymin = i32::min(bb.ymin, point.y);
-        bb.ymax = i32::max(bb.ymax, point.y);
-        bb
-    });
-    let hwidth = (bb.xmax - bb.xmin) / 2 + 1;
-    let hheight = (bb.ymax - bb.ymin) / 2 + 1;
-    bb.xmin -= hwidth;
-    bb.xmax += hwidth;
-    bb.ymin -= hheight;
-    bb.ymax += hheight;
-    let max_distance = (bb.xmax - bb.xmin + bb.ymax - bb.ymin) / 2;
+    let mut bb = BoundingBox::from_points(&points);
+    bb.expand();
+    let max_distance = bb.max_distance();
     println!("max distance: {max_distance}");
-    for distance in 1..=max_distance {
+    for dist in 1..=max_distance {
         for ref_point in points.iter() {
-            let points_at_a_distance = get_points_at_a_distance(ref_point, distance as usize);
+            let points_at_a_distance = get_points_at_a_distance(ref_point, dist);
             // println!("num points at a distance: {}", points_at_a_distance.len());
             for point in points_at_a_distance.iter() {
                 territory
                     .entry(point.clone())
                     .and_modify(|e| {
                         if let Status::Assigned(Assignment {
-                            distance: current_distance,
+                            distance: distance_to_ref,
                             ..
-                        }) = e && distance == *current_distance as i32 {
+                        }) = e && dist == *distance_to_ref {
                                 *e = Status::Tied;
                         }
                     })
                     .or_insert(Status::Assigned(Assignment {
                         reference: ref_point.clone(),
-                        distance: distance as usize,
+                        distance: dist,
                     }));
             }
         }
     }
-    territory.iter().for_each(|(_, v)| {
+    let on_boundary = |point: &Point| is_on_outer_boundary(point, &bb);
+    let infinite_area_points: HashSet<Point> = territory.keys().cloned().filter(on_boundary).collect();
+    territory.iter().filter(|(p, _)| !infinite_area_points.contains(p)).for_each(|(_, v)| {
         if let Status::Assigned(Assignment {
             reference,
             ..
@@ -98,6 +87,12 @@ fn part1(input: &str) -> Result<()> {
 }
 
 
+fn is_on_outer_boundary(point: &Point, bb: &BoundingBox) -> bool {
+    point.x == bb.xmin
+    || point.x == bb.xmax
+    || point.y == bb.ymin
+    || point.y == bb.ymax
+}
 // would be better to use a generator here
 fn get_points_at_a_distance(point: &Point, distance: usize) -> Vec<Point> {
     let mut points = Vec::with_capacity(4 * distance);
@@ -170,21 +165,51 @@ impl BoundingBox {
             ymax,
         }
     }
+
+    fn from_points(points: &[Point]) -> Self {
+        let mut bb = BoundingBox::new(points[0].x, points[0].y, points[0].x, points[0].y);
+        bb = points.iter().fold(bb, |mut bb, point| {
+            bb.xmin = i32::min(bb.xmin, point.x);
+            bb.xmax = i32::max(bb.xmax, point.x);
+            bb.ymin = i32::min(bb.ymin, point.y);
+            bb.ymax = i32::max(bb.ymax, point.y);
+            bb
+        });
+        bb
+    }
+
+    fn expand(&mut self) {
+        let hwidth = (self.xmax - self.xmin) / 2 + 1;
+        let hheight = (self.ymax - self.ymin) / 2 + 1;
+        self.xmin -= hwidth;
+        self.xmax += hwidth;
+        self.ymin -= hheight;
+        self.ymax += hheight;
+    }
+
+    fn max_distance(&self) -> usize {
+        ((self.xmax - self.xmin + self.ymax - self.ymin) / 2) as usize
+    }
 }
 
-// fn initialize_points<'a>(
-//     bb: BoundingBox,
-//     territory: &mut HashMap<Point, Status>,
-//     point: Point,
-// ) -> (BoundingBox, &'a mut HashMap<Point, Status>) {
-//     bb.xmin = cmp::min(bb.xmin, Some(point.x));
-//     bb.ymin = cmp::min(bb.ymin, Some(point.y));
-//     bb.xmax = cmp::max(bb.xmax, Some(point.x));
-//     bb.ymax = cmp::max(bb.ymax, Some(point.y));
-//     territory.insert(point.clone(), Status::Unassigned);
-//     (bb, stuff.1)
-// }
+
 
 fn part2(input: &str) -> Result<()> {
+    println!("{}", input.len());
     Ok(())
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_bb_construction() {
+        let points = vec![Point {x:1,y:1}, Point {x:-1, y:0}];
+        let bb = BoundingBox::from_points(&points);
+        assert_eq!(bb.xmin, -1);        
+        assert_eq!(bb.ymin, 0);        
+        assert_eq!(bb.xmax, 1);        
+        assert_eq!(bb.ymax, 1);        
+    }
 }
