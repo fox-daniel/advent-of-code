@@ -249,6 +249,11 @@ mod test {
         let w = bb.width();
         let num_points = 2*(w+h);
         assert_eq!(boundary_points.len(),num_points);
+        // check four corners
+        assert!(boundary_points.contains(&Point{x: -1, y: -4}));
+        assert!(boundary_points.contains(&Point{x: -1, y: 3}));
+        assert!(boundary_points.contains(&Point{x: 2, y: 3}));
+        assert!(boundary_points.contains(&Point{x: 2, y: -4}));
     }
     
     #[test]
