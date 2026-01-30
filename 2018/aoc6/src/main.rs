@@ -12,46 +12,29 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+    /// Determine a bounding box and only process points inside it, including the boundary
+    /// - infinite area points are identified as follows:
+    ///   - for each boundary point, find the reference point for it; that reference point will have infinite area
+    /// - Breadth first search starting from a reference points: for each distance, check all points that distance from a reference point.
+    /// - update the status of each point in the search
+    ///   - None
+    ///   - Assigned(Assignment {reference, distance})
+    ///   - Tied
+    /// - filter out points with infinite area: if a point on the boudary references point P, then P will have infinite area.
+    ///
 fn part1(input: &str) -> Result<()> {
-    // determine a bounding box and only process points inside it, including the boundary
-    // - infinite area points are identified as follows:
-    //   - for each boundary point, find the reference point for it; that reference point will have infinite area
-    // HashMap<Point, Status>
-    // - Status indicates None, Assigned {reference, distance}, Tied
-    //
-    //
-    // graph search starting from each letter
-    // let n be the half width of the bounding box
-    // for i in 0..2n
-    //   - for each ref point
-    //     - find points at distance n from
-    //     - assign if not assigned
-    //     - handle ties: if assigned is same distance, switch to tie sentinal
-    //
-    // need to filter out points with infinite area
-    //
-    //
-    //
-    // x     x
-    //    x  x
-    //    x  x
-    //       x
-    //
-    //
-    //
     let points: Vec<Point> = input.lines().map(Point::from).collect();
     let mut area_map = HashMap::<Point, usize>::new();
     let mut territory = HashMap::<Point, Status>::new();
-    let mut bb = BoundingBox::from_points(&points);
-    let max_distance = bb.max_distance();
+    let bb = BoundingBox::from_points(&points);
+    let max_distance = bb.max_distance_to_a_reference_point();
     println!("max distance: {max_distance}");
     for dist in 1..=max_distance {
         for ref_point in points.iter() {
             update_assignments(ref_point, dist, &mut territory);
         }
     }
-    let on_boundary = |point: &Point| is_on_outer_boundary(point, &bb);
-    let boundary_points: HashSet<Point> = territory.keys().cloned().filter(on_boundary).collect();
+    let boundary_points: HashSet<Point>  = bb.get_boundary_points().iter().cloned().collect();
     territory.iter().filter(|(p, _)| !boundary_points.contains(p)).for_each(|(_, v)| {
         if let Status::Assigned(Assignment {
             reference,
@@ -227,7 +210,7 @@ impl BoundingBox {
         points
     }
 
-    fn max_distance(&self) -> usize {
+    fn max_distance_to_a_reference_point(&self) -> usize {
         self.height()/2 + self.width()/2
     }
 }
@@ -274,4 +257,29 @@ mod test {
         assert_eq!(boundary_points.len(),num_points);
     }
     
+    #[test]
+    fn test_max_boundary() {
+        let points = vec![Point {x:0,y:0}, Point {x:4, y:4}];
+        /*
+        Example:
+        r x x x x
+        x x x x x
+        x x p x x
+        x x x x x
+        x x x x r
+        */
+        let bb = BoundingBox::from_points(&points);
+        let dist = bb.max_distance_to_a_reference_point();
+        assert_eq!(dist, 4);
+    }
+
+    #[test]
+    fn test_get_points_at_a_distance() {
+        let territory = HashMap::new();
+        let point = Point {x: 0, y: 0};
+        let distance = 3;
+        let points = get_points_at_a_distance(&point, distance, &territory);
+        println!("{points:?}");
+        assert_eq!(points.len(), 12);
+    }
 }
