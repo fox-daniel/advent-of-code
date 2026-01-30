@@ -63,10 +63,28 @@ fn part1(input: &str) -> Result<()> {
     for distance in 1..=max_distance {
         for point in points.iter() {
             let points_at_a_distance = get_points_at_a_distance(point, distance as usize);
+            // println!("{points_at_a_distance:?}");
+            for point in points_at_a_distance.iter() {
+                territory
+                    .entry(point.clone())
+                    .and_modify(|e| {
+                        if let Status::Assigned(Assignment {
+                            distance: current_distance,
+                            ..
+                        }) = e && distance == *current_distance as i32 {
+                                *e = Status::Tied;
+                        }
+                    })
+                    .or_insert(Status::Assigned(Assignment {
+                        reference: point.clone(),
+                        distance: distance as usize,
+                    }));
+            }
         }
     }
     Ok(())
 }
+
 
 // would be better to use a generator here
 fn get_points_at_a_distance(point: &Point, distance: usize) -> Vec<Point> {
@@ -95,19 +113,19 @@ fn get_points_at_a_distance(point: &Point, distance: usize) -> Vec<Point> {
     points
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum Status {
-    Assigned,
+    Assigned(Assignment),
     Tied,
 }
 
-#[derive(Debug, Clone)]
-struct Assigned {
-    reference: u8,
+#[derive(Debug, Clone, PartialEq)]
+struct Assignment {
+    reference: Point,
     distance: usize,
 }
 
-#[derive(Debug, Hash, std::cmp::Eq, std::cmp::PartialEq, Clone)]
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
 struct Point {
     x: i32,
     y: i32,
