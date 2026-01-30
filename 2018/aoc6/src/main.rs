@@ -13,14 +13,12 @@ fn main() -> Result<()> {
 }
 
 fn part1(input: &str) -> Result<()> {
-    // determine a bounding box and only process points inside it:
-    //   - this needs to extend w+l outside the minimal box, where w and l are the dimensions of the minimal bounding box
-    //   - the reason for this is that points interior to the bounding box edges can still have infinite area
+    // determine a bounding box and only process points inside it, including the boundary
+    // - infinite area points are identified as follows:
+    //   - for each boundary point, find the reference point for it; that reference point will have infinite area
     // HashMap<Point, Status>
-    // - Status indicates Unassigned, Assigned {reference, distance}, Tied
+    // - Status indicates None, Assigned {reference, distance}, Tied
     //
-    // - ASCII-CODE(A)=64
-    // - ASCII-CODE(A)=97
     //
     // graph search starting from each letter
     // let n be the half width of the bounding box
@@ -45,9 +43,6 @@ fn part1(input: &str) -> Result<()> {
     let mut area_map = HashMap::<Point, usize>::new();
     let mut territory = HashMap::<Point, Status>::new();
     let mut bb = BoundingBox::from_points(&points);
-    // make the bounding box big enough such that the following holds:
-    // - if a boundary point references a point then that point will have infinite area
-    bb.expand();
     let max_distance = bb.max_distance();
     println!("max distance: {max_distance}");
     for dist in 1..=max_distance {
@@ -191,17 +186,49 @@ impl BoundingBox {
         bb
     }
 
-    fn expand(&mut self) {
-        let hwidth = (self.xmax - self.xmin) / 2 + 1;
-        let hheight = (self.ymax - self.ymin) / 2 + 1;
-        self.xmin -= hwidth;
-        self.xmax += hwidth;
-        self.ymin -= hheight;
-        self.ymax += hheight;
+    fn height(&self) -> usize {
+        (self.ymax - self.ymin) as usize
+    }
+    
+    fn width(&self) -> usize {
+        (self.xmax - self.xmin) as usize
+    }
+
+    fn get_boundary_points(&self) -> Vec<Point> {
+        let mut points = Vec::new();
+        for i in 0..=self.height() {
+            points.push(
+                Point {
+                    x: self.xmin,
+                    y: self.ymin + i as i32,
+                }
+            );
+            points.push(
+                Point {
+                    x: self.xmax,
+                    y: self.ymin + i as i32,
+                }
+            );
+        }
+        for i in 1..self.width() {
+            points.push(
+                Point {
+                    x: self.xmin + i as i32,
+                    y: self.ymin,
+                }
+            );
+            points.push(
+                Point {
+                    x: self.xmin + i as i32,
+                    y: self.ymax,
+                }
+            );
+        }
+        points
     }
 
     fn max_distance(&self) -> usize {
-        ((self.xmax - self.xmin + self.ymax - self.ymin) / 2) as usize
+        self.height()/2 + self.width()/2
     }
 }
 
@@ -237,14 +264,14 @@ mod test {
     }
 
     #[test]
-    fn test_bb_expand() {
-        let points = vec![Point {x:1,y:1}, Point {x:-1, y:0}];
-        let mut bb = BoundingBox::from_points(&points);
-        bb.expand();
-        assert_eq!(bb.xmin, -3);        
-        assert_eq!(bb.ymin, -1);        
-        assert_eq!(bb.xmax, 3);        
-        assert_eq!(bb.ymax, 2);        
+    fn test_get_boundary_points() {
+        let points = vec![Point {x:-1,y:-4}, Point {x:2, y:3}];
+        let bb = BoundingBox::from_points(&points);
+        let boundary_points = bb.get_boundary_points();
+        let h = bb.height();
+        let w = bb.width();
+        let num_points = 2*(w+h);
+        assert_eq!(boundary_points.len(),num_points);
     }
     
 }
