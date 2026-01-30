@@ -56,8 +56,8 @@ fn part1(input: &str) -> Result<()> {
         }
     }
     let on_boundary = |point: &Point| is_on_outer_boundary(point, &bb);
-    let infinite_area_points: HashSet<Point> = territory.keys().cloned().filter(on_boundary).collect();
-    territory.iter().filter(|(p, _)| !infinite_area_points.contains(p)).for_each(|(_, v)| {
+    let boundary_points: HashSet<Point> = territory.keys().cloned().filter(on_boundary).collect();
+    territory.iter().filter(|(p, _)| !boundary_points.contains(p)).for_each(|(_, v)| {
         if let Status::Assigned(Assignment {
             reference,
             ..
