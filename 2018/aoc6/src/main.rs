@@ -23,28 +23,39 @@ fn main() -> Result<()> {
     /// - filter out points with infinite area: if a point on the boudary references point P, then P will have infinite area.
     ///
 fn part1(input: &str) -> Result<()> {
-    let points: Vec<Point> = input.lines().map(Point::from).collect();
-    let mut area_map = HashMap::<Point, usize>::new();
+    let reference_points: Vec<Point> = input.lines().map(Point::from).collect();
+    let mut claim_count = HashMap::<Point, usize>::new();
     let mut territory = HashMap::<Point, Status>::new();
-    let bb = BoundingBox::from_points(&points);
+    let mut points_claiming_infinite_area = HashSet::<Point>::new();
+    let bb = BoundingBox::from_points(&reference_points);
     let max_distance = bb.max_distance_to_a_reference_point();
     println!("max distance: {max_distance}");
-    for dist in 1..=max_distance {
-        for ref_point in points.iter() {
+    for dist in 0..=max_distance {
+        for ref_point in reference_points.iter() {
             update_assignments(ref_point, dist, &mut territory);
         }
     }
     let boundary_points: HashSet<Point>  = bb.get_boundary_points();
+    // assign claim counts, dropping points which claim a boundary point
+    boundary_points.iter().for_each(|p| {
+        if let Some(Status::Assigned(assignment)) = territory.get(p) {
+            points_claiming_infinite_area.insert(assignment.reference.clone());
+        }
+    });
     territory.iter().filter(|(p, _)| !boundary_points.contains(p)).for_each(|(_, v)| {
         if let Status::Assigned(Assignment {
             reference,
             ..
         }) = v {
-            area_map.entry(reference.clone()).and_modify(|count| *count += 1).or_insert(1);
+            if !points_claiming_infinite_area.contains(reference) {
+                claim_count.entry(reference.clone()).and_modify(|count| *count += 1).or_insert(1);
+            }
         }
     });
-    println!("{area_map:?}");
-    let max_area = area_map.iter().max_by_key(|item| item.1);
+    println!("num reference points to start: {}", reference_points.len());
+    println!("num points claiming infinite area: {}",points_claiming_infinite_area.len());
+    println!("{claim_count:#?}");
+    let max_area = claim_count.iter().max_by_key(|item| item.1);
     println!("part1: {max_area:?}"); 
     Ok(())
 }
@@ -72,6 +83,9 @@ fn update_assignments(ref_point: &Point, dist: usize, territory: &mut HashMap<Po
 
 // would be better to use a generator here
 fn get_points_at_a_distance(point: &Point, distance: usize, territory: &HashMap<Point, Status>) -> Vec<Point> {
+    if distance == 0 {
+        return vec![point.clone()];
+    }
     let mut points = Vec::new();
     let x = point.x;
     let y = point.y;
