@@ -46,11 +46,9 @@ fn part1(input: &str) -> Result<()> {
         if let Status::Assigned(Assignment {
             reference,
             ..
-        }) = v {
-            if !points_claiming_infinite_area.contains(reference) {
+        }) = v && !points_claiming_infinite_area.contains(reference) {
                 claim_count.entry(reference.clone()).and_modify(|count| *count += 1).or_insert(1);
             }
-        }
     });
     println!("num reference points to start: {}", reference_points.len());
     println!("num points claiming infinite area: {}",points_claiming_infinite_area.len());
