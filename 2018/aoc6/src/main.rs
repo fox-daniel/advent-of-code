@@ -222,7 +222,12 @@ impl BoundingBox {
 }
 
 
-
+/// Brute force: for each point calculate all distances
+/// Faster:
+///
+/// store two copies of ref points, sorted by horizontal and vertical
+/// start at corner and calculate distance
+/// move horizontal: with each step update all distances by 1, 
 fn part2(input: &str) -> Result<()> {
     println!("{}", input.len());
     Ok(())

@@ -7,6 +7,14 @@ cargo new "$dir_name"
 
 mkdir "$dir_name/input"
 
+# the session cookie can be found by
+# 1. navigating to the input file from the AOC webset
+# 2. in your browser, toggle on developer tools
+# 3. among the windows, "Elements, Console, Sources, ..." select "Application"
+# 4. under the Storage section click "Cookies"
+# 5. copy the value of the session cookie
+# 6. in the terminal run `export AOC_SESSION_COOKIE=<value of your session cookie>`
+# 7. it will expire, so you may need to reset it 
 session_cookie="$AOC_SESSION_COOKIE"
 
 curl -b "session=$session_cookie" "https://adventofcode.com/2018/day/$1/input" > "$dir_name/input/input.txt"
