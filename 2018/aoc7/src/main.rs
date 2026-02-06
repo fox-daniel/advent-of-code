@@ -1,5 +1,7 @@
 use anyhow::Context;
 use regex::Regex;
+use std::collections::{HashMap, HashSet, BinaryHeap};
+use std::cmp::Reverse;
 use std::fs;
 use std::io::Write;
 use std::ops::Deref;
@@ -25,15 +27,41 @@ fn main() -> Result<()> {
 
 fn part1(input: &str) -> Result<()> {
     let edges: Edges = input.parse()?;
-    println!("{edges:#?}");
+    // writeln!(std::io::stdout(), "{edges:#?}")?;
+    let sequence: String = bfs(edges);    
+    writeln!(std::io::stdout(), "{sequence:?}")?;    
     Ok(())
 }
 
+
+fn bfs(edges: Edges) -> String {
+    let mut sequence = vec![];
+    let mut destinations = HashSet::<char>::new();
+    for destination_set in edges.0.values() {
+        destinations.extend(destination_set);
+    }
+    let keys = HashSet::from_iter(edges.clone().into_keys());
+    let roots: HashSet<Reverse<_>> = keys.difference(&destinations).cloned().map(|c| Reverse(c)).collect();
+    let mut queue = BinaryHeap::<Reverse<char>>::from_iter(roots);
+    let mut visited = HashSet::<Reverse<char>>::new();
+    while !queue.is_empty() {
+        println!("{queue:?}");
+        let current = queue.pop().expect("cannot enter loop if queue is empty");
+        if let Some(children) = edges.0.get(&current.0) {
+            let children: HashSet<Reverse<char>> = children.iter().map(|c| Reverse(*c)).filter(|c| !visited.contains(c)).collect();
+            sequence.push(current);
+            visited.extend(children.clone());
+            queue.extend(children);
+        }
+    }
+    sequence.iter().map(|c| c.0).collect()
+}
+
 #[derive(Debug)]
-struct Edges(Vec<(char, char)>);
+struct Edges(HashMap::<char, HashSet<char>>);
 
 impl Deref for Edges {
-    type Target = Vec<(char, char)>;
+    type Target = HashMap::<char, HashSet<char>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -43,7 +71,7 @@ impl Deref for Edges {
 impl std::str::FromStr for Edges {
     type Err = anyhow::Error;
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let mut edges = Vec::new();
+        let mut edges = HashMap::<char, HashSet<char>>::new();
         for line in s.split("\n") {
             if line.is_empty() {
                 continue;
@@ -58,7 +86,7 @@ impl std::str::FromStr for Edges {
                 .name("destination")
                 .and_then(|m| m.as_str().parse::<char>().map_or(None, |c| Some(c)));
             if let Some(s) = source && let Some(d) = destination {
-                edges.push((s, d));
+                edges.entry(s).or_default().insert(d);
             }
         }
         Ok(Edges(edges))
@@ -81,5 +109,21 @@ mod test {
             assert_eq!(source, Some(Some("X")));
             assert_eq!(destination, Some(Some("C")));
         }
+    }
+
+    #[test]
+    fn test_example_input() {
+        let input = "Step C must be finished before step A can begin.
+Step C must be finished before step F can begin.
+Step A must be finished before step B can begin.
+Step A must be finished before step D can begin.
+Step B must be finished before step E can begin.
+Step D must be finished before step E can begin.
+Step F must be finished before step E can begin.";
+        let edges: Edges = input.parse().unwrap();
+        writeln!(std::io::stdout(), "{edges:#?}").unwrap();
+        let sequence: String = bfs(edges);    
+        // writeln!(std::io::stdout(), "{sequence:?}")?;    
+        assert_eq!(sequence, "CABDFE");        
     }
 }
