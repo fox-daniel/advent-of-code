@@ -42,34 +42,20 @@ fn bfs(edges: Edges) -> String {
     }
     let keys = HashSet::from_iter(edges.clone().into_keys());
     let roots: HashSet<Reverse<_>> = keys.difference(&destinations).cloned().map(|c| Reverse(c)).collect();
+    // queue holds indegree=0 nodes in alphabetical order
     let mut queue = BinaryHeap::<Reverse<char>>::from_iter(roots);
-    let mut visited = HashSet::<Reverse<char>>::new();
     let mut indegree = HashMap::<char, u8>::new();
     edges.0.values().for_each(|v| {
-        // println!("{v:?}");
         v.iter().for_each(|d| {let _ = indegree.entry(*d).and_modify(|count| *count +=1 ).or_insert(1);});
     });
-    println!("ndegree: {indegree:?}");
     while !queue.is_empty() {
-        println!("{queue:?}");
         let current = queue.pop().expect("cannot enter loop if queue is empty");
-        println!("{}", current.0);
-        if let Some(d) = indegree.get(&current.0) && *d <= 1 {
-            sequence.push(current);
-            visited.insert(current);
-        } else if  indegree.get(&current.0).is_some_and(|v| *v>1) {
-            indegree.entry(current.0).and_modify(|count| *count -= 1);
-            continue;
-        }
         if let Some(children) = edges.0.get(&current.0) {
-            let children: HashSet<Reverse<char>> = children.iter().map(|c| Reverse(*c)).filter(|c| !visited.contains(c)).collect();
-            println!("dealing with children of {}", current.0);
-            // visited.extend(children.clone());
-            queue.extend(children);
-        } else {
-            sequence.push(current);
-            visited.insert(current);
-        }
+            children.iter().for_each(|c| { let _ = indegree.entry(*c).and_modify(|v| *v -= 1);});
+            let ready_set: HashSet<Reverse<char>> = children.iter().filter(|c| indegree.get(c).is_some_and(|v| *v == 0)).map(|c| Reverse(*c)).collect();
+            queue.extend(ready_set);
+        } 
+        sequence.push(current);
     }
     sequence.iter().map(|c| c.0).collect()
 }
