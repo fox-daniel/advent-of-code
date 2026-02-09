@@ -44,14 +44,31 @@ fn bfs(edges: Edges) -> String {
     let roots: HashSet<Reverse<_>> = keys.difference(&destinations).cloned().map(|c| Reverse(c)).collect();
     let mut queue = BinaryHeap::<Reverse<char>>::from_iter(roots);
     let mut visited = HashSet::<Reverse<char>>::new();
+    let mut indegree = HashMap::<char, u8>::new();
+    edges.0.values().for_each(|v| {
+        // println!("{v:?}");
+        v.iter().for_each(|d| {let _ = indegree.entry(*d).and_modify(|count| *count +=1 ).or_insert(1);});
+    });
+    println!("ndegree: {indegree:?}");
     while !queue.is_empty() {
         println!("{queue:?}");
         let current = queue.pop().expect("cannot enter loop if queue is empty");
+        println!("{}", current.0);
+        if let Some(d) = indegree.get(&current.0) && *d <= 1 {
+            sequence.push(current);
+            visited.insert(current);
+        } else if  indegree.get(&current.0).is_some_and(|v| *v>1) {
+            indegree.entry(current.0).and_modify(|count| *count -= 1);
+            continue;
+        }
         if let Some(children) = edges.0.get(&current.0) {
             let children: HashSet<Reverse<char>> = children.iter().map(|c| Reverse(*c)).filter(|c| !visited.contains(c)).collect();
-            sequence.push(current);
-            visited.extend(children.clone());
+            println!("dealing with children of {}", current.0);
+            // visited.extend(children.clone());
             queue.extend(children);
+        } else {
+            sequence.push(current);
+            visited.insert(current);
         }
     }
     sequence.iter().map(|c| c.0).collect()
@@ -121,7 +138,7 @@ Step B must be finished before step E can begin.
 Step D must be finished before step E can begin.
 Step F must be finished before step E can begin.";
         let edges: Edges = input.parse().unwrap();
-        writeln!(std::io::stdout(), "{edges:#?}").unwrap();
+        // writeln!(std::io::stdout(), "{edges:#?}").unwrap();
         let sequence: String = bfs(edges);    
         // writeln!(std::io::stdout(), "{sequence:?}")?;    
         assert_eq!(sequence, "CABDFE");        
