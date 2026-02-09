@@ -51,9 +51,13 @@ fn bfs(edges: Edges) -> String {
     while !queue.is_empty() {
         let current = queue.pop().expect("cannot enter loop if queue is empty");
         if let Some(children) = edges.0.get(&current.0) {
+            // update indegree of children
             children.iter().for_each(|c| { let _ = indegree.entry(*c).and_modify(|v| *v -= 1);});
-            let ready_set: HashSet<Reverse<char>> = children.iter().filter(|c| indegree.get(c).is_some_and(|v| *v == 0)).map(|c| Reverse(*c)).collect();
-            queue.extend(ready_set);
+            // add children to queue if have indegree=0
+            queue.extend(
+                children.iter().filter(
+                    |c| indegree.get(c).is_some_and(|v| *v == 0)
+                ).map(|c| Reverse(*c)));
         } 
         sequence.push(current);
     }
