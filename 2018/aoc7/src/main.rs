@@ -36,18 +36,12 @@ fn part1(input: &str) -> Result<()> {
 
 fn bfs(edges: Edges) -> String {
     let mut sequence = vec![];
-    let mut destinations = HashSet::<char>::new();
-    for destination_set in edges.0.values() {
-        destinations.extend(destination_set);
-    }
-    let keys = HashSet::from_iter(edges.clone().into_keys());
-    let roots: HashSet<Reverse<_>> = keys.difference(&destinations).cloned().map(|c| Reverse(c)).collect();
-    // queue holds indegree=0 nodes in alphabetical order
+    let destinations: HashSet<char> = edges.0.values().flatten().copied().collect();
+    let roots: HashSet<Reverse<char>> = edges.keys().filter(|k| !destinations.contains(k)).map(|&c| Reverse(c)).collect();
+    // Invariant: queue holds indegree=0 nodes in alphabetical order
     let mut queue = BinaryHeap::<Reverse<char>>::from_iter(roots);
     let mut indegree = HashMap::<char, u8>::new();
-    edges.0.values().for_each(|v| {
-        v.iter().for_each(|d| {let _ = indegree.entry(*d).and_modify(|count| *count +=1 ).or_insert(1);});
-    });
+    edges.0.values().flatten().for_each(|d| {let _ = indegree.entry(*d).and_modify(|count| *count += 1).or_insert(1);});
     while !queue.is_empty() {
         let current = queue.pop().expect("cannot enter loop if queue is empty");
         if let Some(children) = edges.0.get(&current.0) {
